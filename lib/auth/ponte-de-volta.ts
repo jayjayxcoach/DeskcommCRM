@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import { BURBUJA_SVG, cssDeLaBurbuja, FONDO_DE_ENTRADA } from "@/lib/elegancia/burbuja";
+
 /**
  * A PONTE DE VOLTA — o documento same-origin que fecha uma navegação de OAuth.
  *
@@ -70,14 +72,30 @@ function escapeHtml(str: string): string {
  * @param nomeDaMarca  `marcaDaSaida(null).nome` (nunca lança)
  * @param mensagem  texto visível enquanto o documento não segue
  */
-export function respostaDePonte(destino: string, nomeDaMarca: string, mensagem: string): Response {
+export function respostaDePonte(
+  destino: string,
+  nomeDaMarca: string,
+  mensagem: string,
+  opcoes: { animada?: boolean } = {},
+): Response {
   const script = `window.location.replace(${literalDeScript(destino)});`;
   const hash = createHash("sha256").update(script).digest("base64");
   const alvo = escapeHtml(destino);
   const nome = escapeHtml(nomeDaMarca);
 
+  // Elegancia de Amor: al abrir la app desde el ícono, en vez de un "Abrindo…"
+  // en blanco, la burbuja del logo aparece y sigue animada hasta que el CRM
+  // carga (allí la continúa `app/SplashDeEntrada.tsx`, con el mismo dibujo).
+  const estilo = opcoes.animada
+    ? `html,body{margin:0;background:${FONDO_DE_ENTRADA}}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}${cssDeLaBurbuja("#eb", true)}`
+    : "";
+  const hashDoEstilo = estilo ? createHash("sha256").update(estilo).digest("base64") : "";
+  const corpo = opcoes.animada
+    ? `<meta name="theme-color" content="${FONDO_DE_ENTRADA}"><style>${estilo}</style><title>${nome}</title><body><div id="eb"><div class="eb-brillo"></div>${BURBUJA_SVG}</div><p class="sr">${escapeHtml(mensagem)}</p><noscript><a href="${alvo}">${nome}</a></noscript><script>${script}</script></body></html>`
+    : `<title>Voltando ao ${nome}</title><body><p>${escapeHtml(mensagem)}</p><a href="${alvo}">Continuar no ${nome}</a><script>${script}</script></body></html>`;
+
   return new Response(
-    `<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Voltando ao ${nome}</title><body><p>${escapeHtml(mensagem)}</p><a href="${alvo}">Continuar no ${nome}</a><script>${script}</script></body></html>`,
+    `<!doctype html><html lang="${opcoes.animada ? "es" : "pt-BR"}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${corpo}`,
     {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
@@ -86,7 +104,7 @@ export function respostaDePonte(destino: string, nomeDaMarca: string, mensagem: 
         "Cache-Control": "no-store",
         "Referrer-Policy": "no-referrer",
         "X-Content-Type-Options": "nosniff",
-        "Content-Security-Policy": `default-src 'none'; script-src 'sha256-${hash}'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`,
+        "Content-Security-Policy": `default-src 'none'; script-src 'sha256-${hash}';${hashDoEstilo ? ` style-src 'sha256-${hashDoEstilo}';` : ""} base-uri 'none'; frame-ancestors 'none'; form-action 'none'`,
       },
     },
   );

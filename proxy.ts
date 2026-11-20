@@ -163,7 +163,7 @@ export async function proxy(request: NextRequest) {
     // redirect normal. Mesmo mecanismo de `lib/auth/ponte-de-volta.ts`.
     if (navegacaoDeFora(request)) {
       const marca = await marcaDaSaida(null);
-      return respostaDePonte(safeNext(pathname + search, "/app"), marca.nome, "Abrindo…");
+      return respostaDePonte(safeNext(pathname + search, "/app"), marca.nome, "Abriendo…", { animada: true });
     }
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname + search);
