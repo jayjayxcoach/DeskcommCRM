@@ -271,3 +271,30 @@
     width: 26px; height: 26px; font-size: 10px;
   }
 }
+
+/* ── Configuración: pestañas por área y cuadritos compactos ── */
+.eleg-config-tabs {
+  display: flex; gap: 2px; padding: 4px; border-radius: 999px; overflow-x: auto; scrollbar-width: none; align-self: flex-start; max-width: 100%;
+  background: var(--eleg-glass); border: 1px solid var(--eleg-rim); box-shadow: var(--eleg-shadow);
+  -webkit-backdrop-filter: var(--eleg-blur); backdrop-filter: var(--eleg-blur);
+}
+.eleg-config-tabs::-webkit-scrollbar { display: none; }
+.eleg-config-tabs a { padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600; white-space: nowrap; color: var(--eleg-text); }
+.eleg-config-tabs a.on { background: var(--eleg-pill); color: var(--eleg-on-pill); box-shadow: var(--eleg-pill-shadow); }
+.eleg-config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.eleg-config-item {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 16px; min-width: 0;
+  background: var(--eleg-glass); border: 1px solid var(--eleg-rim); color: var(--eleg-text);
+  -webkit-backdrop-filter: var(--eleg-blur); backdrop-filter: var(--eleg-blur);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.eleg-config-item:hover { transform: translateY(-1px); box-shadow: var(--eleg-pop); }
+.eleg-config-ico { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex: none; background: var(--eleg-well); }
+.eleg-config-nombre { font-size: 13.5px; font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+@media (max-width: 767px) {
+  .eleg-config-tabs { margin: 0 -14px; padding: 4px; border-radius: 0; border-left: 0; border-right: 0; align-self: stretch; }
+  .eleg-config-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .eleg-config-item { padding: 9px 10px; gap: 9px; }
+  .eleg-config-ico { width: 32px; height: 32px; }
+  .eleg-config-nombre { font-size: 12.5px; }
+}
