@@ -45,6 +45,7 @@ import { categoriaDoMotivo } from "@/lib/leads/motivos-de-perda-do-funil";
 import { hrefDaPaginaDoNegocio } from "@/lib/leads/pagina-do-negocio";
 import { ROLE_RANK, type Role } from "@/lib/auth/types";
 import { cn } from "@/lib/utils";
+import { BotonesDeEvento } from "@/components/kanban/BotonesDeEvento";
 
 /**
  * AS TRÊS VISÕES DO FUNIL (#2770, #3172).
@@ -514,6 +515,7 @@ export function PipelinePageClient({
           settings={data?.pipeline.settings ?? funilInicial.settings}
         />
       )}
+      <BotonesDeEvento filters={filters} onChange={setFilters} leads={data?.leads ?? []} />
       <FilterBar
         filters={filters}
         onChange={setFilters}

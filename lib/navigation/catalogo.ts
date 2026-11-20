@@ -233,6 +233,26 @@ export const NAV_CATALOG = [
     sidebar: true,
   },
 
+  // ---- Elegancia de Amor: Resumen y Finanzas ----
+  {
+    href: "/app/resumen",
+    label: "Resumen",
+    description: "Cómo van las ventas: embudo, pedidos calientes, próximos eventos y actividad.",
+    icon: "Gauge",
+    group: "crm",
+    section: "O dia a dia da venda",
+    sidebar: true,
+  },
+  {
+    href: "/app/finanzas",
+    label: "Finanzas",
+    description: "Lo que entra por ventas y lo que sale en Facebook y en la IA del CRM, mes a mes.",
+    icon: "ChartLineUp",
+    group: "crm",
+    section: "O dia a dia da venda",
+    minRole: "manager",
+    sidebar: true,
+  },
   // ---- CRM — o funil ----
   {
     // ⚠️ ERA "Kanban", e a URL continua sendo. O nome saiu da interface porque o
