@@ -10,7 +10,7 @@ export async function toggleSidebar(currentlyCollapsed: boolean): Promise<void> 
     sameSite: "strict",
     secure: cookieSecure(),
     path: "/",
-    maxAge: 60 * 60 * 24 * 365,
+    // Sin maxAge: dura la sesión del navegador; al volver a entrar, la barra empieza contraída.
   });
   revalidatePath("/app", "layout");
 }

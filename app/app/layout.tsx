@@ -294,7 +294,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // Read sidebar collapsed state SSR to avoid flash.
   const store = await cookies();
-  const collapsed = store.get("sidebar_collapsed")?.value === "1";
+  const collapsed = store.get("sidebar_collapsed")?.value !== "0"; // contraída por defecto
 
   const impersonating = user.support ? {
     agencyId: user.support.agency_id, tenantId: user.support.organization_id, tenantName: user.support.name,

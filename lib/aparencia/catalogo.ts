@@ -130,6 +130,56 @@ const SEM_RESPIRO = { menuRecuoY: "0px", menuRecuoX: "0px", menuRaio: "0px", con
 
 export const TEMPLATES: readonly Template[] = [
   {
+    id: "elegancia",
+    nome: "Elegancia",
+    categoria: "Vidrio suave",
+    descricao:
+      "Vidrio blanco translúcido sobre un fondo difuminado cálido, menú flotante y acento negro. En oscuro: carbón con luz lavanda y bordes finos.",
+    fonteTexto: "manrope",
+    fonteTitulo: "manrope",
+    forma: {
+      menuRecuoY: "6px", menuRecuoX: "12px", menuRaio: "26px",
+      conteudoRespiro: "0px", conteudoRaio: "0px",
+      raios: ["8px", "12px", "18px", "24px"],
+      menuRaioItem: "999px", menuDesfoque: "30px", indicadorLargura: "0px",
+      tituloPeso: "600", tituloEspaco: "-0.025em",
+    },
+    cores: {
+      claro: {
+        fundo: "#e9ece7", superficie: "#ffffff", elevada: "#f6f7f4",
+        texto: "#13171a", textoSuave: "#4b524e", textoSutil: "#6b726d", borda: "#dde0da", bordaForte: "#c7cbc3",
+        acento: "#13171a",
+        casca: "radial-gradient(900px 620px at 8% 92%, rgb(214 170 160 / 0.55), transparent 62%), radial-gradient(820px 600px at 92% 88%, rgb(150 170 140 / 0.5), transparent 60%), radial-gradient(760px 520px at 62% 18%, rgb(236 222 200 / 0.75), transparent 62%), radial-gradient(700px 520px at 20% 10%, rgb(255 255 255 / 0.7), transparent 60%), linear-gradient(180deg, #e6e9e3, #d6dbd2)",
+        cascaSutil: "linear-gradient(180deg, #eceee9, #dfe3dc)",
+        conteudo: "transparent", conteudoSombra: "none", topo: "rgb(240 243 238 / 0.45)",
+        sombras: sombras("20 30 20", 1.4),
+        menu: {
+          fundo: "linear-gradient(155deg, rgb(255 255 255 / 0.66) 0%, rgb(255 255 255 / 0.36) 42%, rgb(255 255 255 / 0.24) 70%, rgb(255 255 255 / 0.42) 100%)",
+          fundoSolido: "#f2f3f0", texto: "#13171a", textoSuave: "#4b524e",
+          borda: "rgb(255 255 255 / 0.75)", ativoFundo: "#13171a", ativoFundoSolido: "#13171a", ativoTexto: "#ffffff",
+          brilho: "0 10px 22px -12px rgb(19 23 26 / 0.8)", indicador: "transparent",
+        },
+      },
+      escuro: {
+        fundo: "#0b0c10", superficie: "#15161b", elevada: "#1c1d24",
+        texto: "#f3f3f7", textoSuave: "#b4b5c4", textoSutil: "#8a8b9c", borda: "#25262e", bordaForte: "#30313b",
+        acento: "#c9cbff",
+        casca: "radial-gradient(900px 600px at 18% -10%, rgb(92 98 160 / 0.45), transparent 60%), radial-gradient(900px 700px at 92% 112%, rgb(70 66 130 / 0.32), transparent 60%), radial-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1.5px) 0 0 / 6px 6px, #0b0c10",
+        cascaSutil: "#0b0c10",
+        conteudo: "transparent", conteudoSombra: "none", topo: "rgb(11 12 16 / 0.6)",
+        sombras: sombras("0 0 0", 4),
+        menu: {
+          fundo: "linear-gradient(180deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.015)), rgb(18 19 24 / 0.82)",
+          fundoSolido: "#121318", texto: "#f3f3f7", textoSuave: "#9a9bab",
+          borda: "rgb(255 255 255 / 0.12)",
+          ativoFundo: "linear-gradient(90deg, rgb(255 255 255 / 0.11), rgb(255 255 255 / 0.04))",
+          ativoFundoSolido: "#22232b", ativoTexto: "#ffffff",
+          brilho: "inset 0 1px rgb(255 255 255 / 0.18), inset 0 0 0 1px rgb(255 255 255 / 0.12)", indicador: "transparent",
+        },
+      },
+    },
+  },
+  {
     id: "obsidiana",
     nome: "Obsidiana",
     categoria: "Luxo noturno",

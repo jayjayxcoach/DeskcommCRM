@@ -8,6 +8,7 @@ const Card = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
+    data-tarjeta=""
     className={cn(
       "rounded-lg border border-border bg-surface text-text shadow-xs",
       className,

@@ -71,10 +71,10 @@ const INBOX_TABS: { value: InboxTab; label: string }[] = [
   // para a IA" como a sabotagem que deve reprovar. O rótulo não mudou quando o
   // significado mudou (deixou de filtrar `ai_handling` e passou a perguntar a
   // régua do motor) — e a posição sim: ela era a última fora do padrão.
+  { value: "all", label: "Todas" },
   { value: "ai", label: "Automático" },
   { value: "unassigned", label: "Fila" },
   { value: "mine", label: "Minhas" },
-  { value: "all", label: "Todas" },
   { value: "closed", label: "Fechadas" },
   // "Arquivadas" fica ao lado de "Fechadas" porque as duas são passado — e
   // separada dela porque são passados diferentes (#923): fechada é atendimento

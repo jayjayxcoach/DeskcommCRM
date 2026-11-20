@@ -252,7 +252,7 @@ const FILTER_TABS: InboxTab[] = [
  * lista volta RLS-scoped (a tab só some cosmeticamente); default: fila.
  */
 function parseFilterParam(v: string | null): InboxTab {
-  return v && FILTER_TABS.includes(v as InboxTab) ? (v as InboxTab) : "unassigned";
+  return v && FILTER_TABS.includes(v as InboxTab) ? (v as InboxTab) : "all";
 }
 
 /**
