@@ -263,3 +263,14 @@ body:has([data-marca-org][data-aparencia="elegancia"]) [data-casca="topo"] {
 [data-theme="dark"] body:has([data-marca-org][data-aparencia="elegancia"]) [data-casca="topo"] {
   border-bottom-color: rgb(255 255 255 / 0.08);
 }
+/* Elegancia: el menú se desplaza sin barra visible (con la barra contraída, la
+   barra de desplazamiento se comía el ancho y achicaba los iconos). */
+body:has([data-marca-org][data-aparencia="elegancia"]) [data-casca="menu"] nav {
+  scrollbar-width: none;
+}
+body:has([data-marca-org][data-aparencia="elegancia"]) [data-casca="menu"] nav::-webkit-scrollbar {
+  display: none;
+}
+body:has([data-marca-org][data-aparencia="elegancia"]) [data-casca="menu"] nav a svg {
+  flex-shrink: 0;
+}

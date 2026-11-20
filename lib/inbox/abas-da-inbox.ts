@@ -53,10 +53,10 @@ import type { InboxTab } from "@/components/inbox/InboxFilters";
  * entrasse lá não poderia ser gravada aqui.
  */
 export const ABAS_DA_INBOX = [
+  "all",
   "ai",
   "unassigned",
   "mine",
-  "all",
   "closed",
   "archived",
   "pessoal",

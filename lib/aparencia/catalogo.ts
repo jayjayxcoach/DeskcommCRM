@@ -138,7 +138,7 @@ export const TEMPLATES: readonly Template[] = [
     fonteTexto: "manrope",
     fonteTitulo: "manrope",
     forma: {
-      menuRecuoY: "6px", menuRecuoX: "12px", menuRaio: "26px",
+      menuRecuoY: "6px", menuRecuoX: "8px", menuRaio: "26px",
       conteudoRespiro: "0px", conteudoRaio: "0px",
       raios: ["8px", "12px", "18px", "24px"],
       menuRaioItem: "999px", menuDesfoque: "30px", indicadorLargura: "0px",
