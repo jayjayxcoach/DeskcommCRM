@@ -255,3 +255,19 @@
   .eleg-acts { gap: 8px; }
   .eleg-cb, .eleg-usuario button { width: 40px; height: 40px; }
 }
+
+/* ── Embudo en el celular: directo a los pedidos ── */
+@media (max-width: 767px) {
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-ctl-funil,
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-filtros-funil { display: none !important; }
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-eventos {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px 4px;
+  }
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-eventos::-webkit-scrollbar { display: none; }
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-eventos > button {
+    height: 36px; padding: 0 12px 0 4px; font-size: 13px; gap: 6px;
+  }
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-eventos > button > span:first-child {
+    width: 26px; height: 26px; font-size: 10px;
+  }
+}

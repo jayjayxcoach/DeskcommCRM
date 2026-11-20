@@ -51,7 +51,7 @@ export function BotonesDeEvento({ filters, onChange, leads }: Props) {
   const encendido = "border-transparent bg-accent text-accent-foreground";
 
   return (
-    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Tipo de evento">
+    <div className="eleg-eventos flex flex-wrap items-center gap-2" role="group" aria-label="Tipo de evento">
       <button type="button" onClick={() => elegir(null)} className={cn(boton, activo === null ? encendido : normal)}>
         <span className="grid h-7 w-7 place-items-center rounded-full bg-background text-[11px] font-bold text-text">
           ✦

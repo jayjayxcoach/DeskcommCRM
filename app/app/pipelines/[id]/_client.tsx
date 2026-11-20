@@ -384,7 +384,7 @@ export function PipelinePageClient({
           (#3172, item 4 do CR), e é o endereço que faz a aba ser alcançável sem
           passar pelo quadro.
         */}
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+        <div className="eleg-ctl-funil flex shrink-0 flex-wrap items-center justify-end gap-2">
           {/* A DENSIDADE DOS CARDS (issue #3461, item 2) mora AO LADO das abas
               da visão, e só no Quadro: é a mesma família de escolha ("como eu
               olho este funil"), mas ela não muda o que se vê — muda quanto cabe.
@@ -516,12 +516,14 @@ export function PipelinePageClient({
         />
       )}
       <BotonesDeEvento filters={filters} onChange={setFilters} leads={data?.leads ?? []} />
-      <FilterBar
-        filters={filters}
-        onChange={setFilters}
-        leads={data?.leads ?? []}
-        settings={data?.pipeline.settings}
-      />
+      <div className="eleg-filtros-funil">
+        <FilterBar
+          filters={filters}
+          onChange={setFilters}
+          leads={data?.leads ?? []}
+          settings={data?.pipeline.settings}
+        />
+      </div>
       {visaoEfetiva === "lista" ? (
         /**
          * ⭐ A LISTA NÃO ESPERA O QUADRO (#3172, item 4 do CR) — e é por isso
