@@ -72,7 +72,7 @@ export async function gastoDeFacebook(admin: SupabaseClient, orgId: string, mese
   const token = credencial.credencial.accessToken;
   try {
     const contas = await listarContas(token);
-    if (!contas.ok) return { estado: "error", detalle: String(contas.detalle ?? contas.falha) };
+    if (!contas.ok) return { estado: "error", detalle: String(contas.detalhe ?? contas.falha) };
     const moeda = contas.dados[0]?.moeda ?? "USD";
     const resultado: MesDeGasto[] = [];
     for (const mes of meses) {
