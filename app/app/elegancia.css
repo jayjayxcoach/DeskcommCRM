@@ -205,3 +205,53 @@
 .eleg-burbuja-fecha { font-size: 14px; font-weight: 700; text-transform: capitalize; margin-bottom: 2px; }
 .eleg-burbuja-fila { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
 .eleg-burbuja-fila b { margin-left: auto; padding-left: 16px; font-size: 14px; font-weight: 700; }
+
+/* ── CELULAR: barra de abajo, panel "Más" y barra de arriba ── */
+.eleg-barra {
+  position: fixed; left: 0; right: 0; z-index: 40;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+  background: var(--eleg-glass); border-top: 1px solid var(--eleg-rim);
+  -webkit-backdrop-filter: var(--eleg-blur); backdrop-filter: var(--eleg-blur);
+  box-shadow: 0 -12px 30px -18px #1e283c4d, inset 0 1px 0 #ffffff59;
+}
+[data-theme="dark"] .eleg-barra { box-shadow: 0 -16px 36px -16px #000000cc, inset 0 1px 0 #ffffff1f; }
+.eleg-barra ul { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.eleg-barra li { flex: 1; min-width: 0; display: flex; }
+.eleg-barra-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 7px 2px 6px; border-radius: 16px; color: var(--eleg-text); opacity: .7;
+  background: none; border: 0; font: inherit;
+}
+.eleg-barra-item.on { opacity: 1; background: var(--eleg-pill); color: var(--eleg-on-pill); box-shadow: var(--eleg-pill-shadow); }
+.eleg-barra-ico { position: relative; display: grid; place-items: center; }
+.eleg-barra-ico .eleg-i { width: 21px; height: 21px; }
+.eleg-barra-lb { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.eleg-barra-ct { position: absolute; top: -7px; left: 13px; font-size: 9.5px; font-weight: 700; background: #e0563f; color: #fff; padding: 0 5px; border-radius: 99px; line-height: 15px; }
+
+.eleg-mas {
+  background: var(--eleg-glass) !important; border: 1px solid var(--eleg-rim) !important;
+  -webkit-backdrop-filter: var(--eleg-blur); backdrop-filter: var(--eleg-blur);
+  border-radius: 28px 28px 0 0; padding: 20px 16px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+  color: var(--eleg-text);
+}
+[data-theme="dark"] .eleg-mas { background: radial-gradient(120% 90% at 85% 115%, #7a7cc94d, #0000 60%), #15161bf2 !important; }
+.eleg-mas-titulo { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .6; margin: 0 4px 14px; }
+.eleg-mas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.eleg-mas-item {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+  padding: 16px 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--eleg-text);
+  background: var(--eleg-well); border: 1px solid var(--eleg-rim); font-family: inherit;
+}
+.eleg-mas-item.on { background: var(--eleg-pill); color: var(--eleg-on-pill); }
+.eleg-mas-ico { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--eleg-glass); border: 1px solid var(--eleg-rim); }
+.eleg-mas-item.on .eleg-mas-ico { background: #ffffff1f; }
+.eleg-mas-ico .eleg-i { width: 20px; height: 20px; }
+
+@media (max-width: 767px) {
+  .eleg-top { grid-template-columns: 1fr auto; gap: 10px; padding: 12px 14px 4px; }
+  .eleg-tabs, .eleg-solo-pc { display: none !important; }
+  .eleg-marca { font-size: 18px; gap: 10px; }
+  .eleg-logo { width: 38px; height: 38px; border-radius: 12px; }
+  .eleg-acts { gap: 8px; }
+  .eleg-cb, .eleg-usuario button { width: 40px; height: 40px; }
+}

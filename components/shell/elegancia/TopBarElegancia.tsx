@@ -101,7 +101,7 @@ export function TopBarElegancia() {
         ))}
       </nav>
       <div className="eleg-acts">
-        <Link className="eleg-cb" href="/app/inbox?filter=all" aria-label="Bandeja">
+        <Link className="eleg-cb eleg-solo-pc" href="/app/inbox?filter=all" aria-label="Bandeja">
           <Icono nombre="inbox" />
         </Link>
         <Avisos />

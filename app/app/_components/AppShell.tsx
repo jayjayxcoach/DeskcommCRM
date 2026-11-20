@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/shell/Sidebar";
 import { TopBar } from "@/components/shell/TopBar";
 import { DockElegancia } from "@/components/shell/elegancia/DockElegancia";
 import { TopBarElegancia } from "@/components/shell/elegancia/TopBarElegancia";
+import { BarraInferiorElegancia } from "@/components/shell/elegancia/BarraInferiorElegancia";
 import { BarraInferior } from "@/components/shell/BarraInferior";
 import { BarraDeProgressoNavegacao } from "@/components/shell/BarraDeProgressoNavegacao";
 import { useSinalDePresenca } from "@/hooks/atendimento/useSinalDePresenca";
@@ -150,7 +151,7 @@ export function AppShell({ sidebarCollapsed, podeAtender, elegancia = false, chi
         Ela própria se esconde acima de `md` — o mesmo corte em que a barra
         lateral aparece, logo acima.
       */}
-      <BarraInferior />
+      {elegancia ? <BarraInferiorElegancia /> : <BarraInferior />}
     </div>
   );
 }
