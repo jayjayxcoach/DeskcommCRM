@@ -255,6 +255,8 @@ export function MessageBubble({
   const [confirmandoReenvio, setConfirmandoReenvio] = useState(false);
   const [seletorDeReacaoAberto, setSeletorDeReacaoAberto] = useState(false);
   const [reacoesFrequentes, setReacoesFrequentes] = useState(REACOES_INICIAIS);
+  const [menuAberto, setMenuAberto] = useState(false);
+  const ponteiroDaSeta = useRef("mouse");
   const reacaoPendente = useRef(false);
   const enviarReacao = async (emoji: string) => {
     if (!onReagir || reacaoPendente.current) return;
@@ -559,10 +561,22 @@ export function MessageBubble({
         )}
       >
         {temMenu && (
-          <DropdownMenu>
+          <DropdownMenu open={menuAberto} onOpenChange={setMenuAberto}>
             <DropdownMenuTrigger asChild>
               <button type="button" aria-label={t("Opções da mensagem")} disabled={ocupado}
-                onClick={() => setReacoesFrequentes(cincoMaisUsados(lerContagens()))}
+                // No toque, o Radix abriria o menu no pointerdown — e o dedo que
+                // começa a rolar o fio em cima da seta abria o menu sem querer.
+                // No toque o menu abre só com o TOQUE completo (click), que o
+                // navegador não dispara quando o gesto vira rolagem.
+                onPointerDown={(e) => {
+                  ponteiroDaSeta.current = e.pointerType;
+                  if (e.pointerType !== "mouse") e.preventDefault();
+                }}
+                onClick={(e) => {
+                  setReacoesFrequentes(cincoMaisUsados(lerContagens()));
+                  if (e.detail !== 0 && ponteiroDaSeta.current !== "mouse") setMenuAberto((v) => !v);
+                  ponteiroDaSeta.current = "mouse";
+                }}
                 className={cn(
                   "absolute right-1 top-1 z-10 rounded-md p-0.5 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-1",
                   // No toque, a área que pega o dedo passa a ~48px sem mudar o desenho:

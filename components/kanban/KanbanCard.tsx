@@ -1,6 +1,6 @@
 "use client";
 import { Draggable } from "@hello-pangea/dnd";
-import { memo, type MouseEvent } from "react";
+import { memo, useState, type MouseEvent } from "react";
 import { useT } from "@/hooks/i18n/useT";
 import { cn } from "@/lib/utils";
 import { formatValorDoNegocio, MOEDA_PADRAO } from "@/lib/money";
@@ -17,6 +17,7 @@ import { OwnerBadge } from "./OwnerBadge";
 import { ContatoNoCard } from "./ContatoNoCard";
 import { ArquivosNoCard } from "./ArquivosNoCard";
 import { TarefasNoCard } from "./TarefasNoCard";
+import { EtiquetaEnProcesoDelCard, MenuDeEtiquetasDelCard } from "./MenuDeEtiquetasDelCard";
 
 /** Os dois gestos de seleção que o card sabe relatar. */
 export type GestoDeSelecao = "alterna" | "intervalo";
@@ -168,6 +169,15 @@ export const KanbanCard = memo(function KanbanCard({
   };
   const handleClick = (e: MouseEvent<HTMLDivElement>) => decidirClique(e);
 
+  // Clic derecho → menú de etiquetas ("En proceso"), donde se hizo el clic.
+  const [menuDeEtiquetas, setMenuDeEtiquetas] = useState<{ x: number; y: number } | null>(null);
+  const handleContextMenu = (e: MouseEvent<HTMLDivElement>) => {
+    if (somenteLeitura) return;
+    e.preventDefault();
+    const caja = e.currentTarget.getBoundingClientRect();
+    setMenuDeEtiquetas({ x: e.clientX - caja.left, y: e.clientY - caja.top });
+  };
+
   return (
     <Draggable draggableId={card.id} index={index} isDragDisabled={somenteLeitura}>
       {(provided, snapshot) => (
@@ -182,6 +192,7 @@ export const KanbanCard = memo(function KanbanCard({
           role="group"
           aria-label={`${t("Negócio")}: ${card.title}`}
           onClick={handleClick}
+          onContextMenu={handleContextMenu}
           // Tags saem do card (Lei A): ficam a um hover, sem ocupar altura.
           title={card.tags.length > 0 ? `Tags: ${card.tags.join(", ")}` : undefined}
           // `data-densidade` é o observável da densidade: o teste de tela mede
@@ -329,7 +340,16 @@ export const KanbanCard = memo(function KanbanCard({
               </span>
             )}
             {!value && !recorrente && "—"}
+            <EtiquetaEnProcesoDelCard tags={lead.tags ?? []} />
           </p>
+          {!somenteLeitura && menuDeEtiquetas && (
+            <MenuDeEtiquetasDelCard
+              lead={lead}
+              pipelineId={pipelineId}
+              posicion={menuDeEtiquetas}
+              onCerrar={() => setMenuDeEtiquetas(null)}
+            />
+          )}
 
           {/* ③ a linha do agente — um slot, três estados, nunca três blocos. */}
           <div className={cn("flex items-center gap-2 text-xs", denso ? "mt-1 h-5" : "mt-1.5 h-6")}>

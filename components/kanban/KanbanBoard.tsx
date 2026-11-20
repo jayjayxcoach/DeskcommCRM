@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useSensorToqueLargo } from "@/hooks/kanban/useSensorToqueLargo";
 import { useRecordarScrollDelQuadro } from "@/hooks/kanban/useRecordarScrollDelQuadro";
+import { useDesplazamientoRecto } from "@/hooks/kanban/useDesplazamientoRecto";
 import { useQueryClient } from "@tanstack/react-query";
 import { useT } from "@/hooks/i18n/useT";
 import { Card } from "@/components/ui/card";
@@ -215,6 +216,7 @@ export function KanbanBoard({
   // de seleção trocava a função de todos os cards e redesenhava o quadro.
   const quadroRef = useRef<HTMLDivElement | null>(null);
   useRecordarScrollDelQuadro(`quadro-scroll:${pipelineId}`, quadroRef, (data?.leads.length ?? 0) > 0);
+  useDesplazamientoRecto(quadroRef, Boolean(data));
   const dataAtual = useRef(data);
   const selecaoAtual = useRef(selectedLeadIds);
   useEffect(() => {
