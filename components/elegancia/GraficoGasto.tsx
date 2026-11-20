@@ -131,7 +131,7 @@ export function GraficoGasto({ dias }: { dias: Array<[string, number, number]> }
           <rect x={0} y={0} width={W} height={H} fill="transparent" />
         </svg>
         {activo && (
-          <div className="eleg-burbuja" style={{ left: `${izquierda}%`, top: `calc(${arriba}% + 8px)` }}>
+          <div className="eleg-burbuja" style={{ left: `${izquierda}%`, top: `${arriba}%` }}>
             <div className="eleg-burbuja-fecha">{fechaLarga(activo[0])}</div>
             <div className="eleg-burbuja-fila">
               <span className="eleg-ley eleg-ley-ganado" />

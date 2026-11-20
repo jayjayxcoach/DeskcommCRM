@@ -184,7 +184,7 @@
 .eleg-marca-dia circle, .eleg-marca-dia line { transition: cx .12s ease, cy .12s ease, x1 .12s ease, x2 .12s ease; }
 .eleg-eje-on { fill: var(--eleg-text) !important; font-weight: 700; }
 .eleg-burbuja {
-  position: absolute; transform: translate(-50%, calc(-100% - 14px)); pointer-events: none;
+  position: absolute; transform: translate(-50%, calc(-100% - 58px)); pointer-events: none;
   display: flex; flex-direction: column; align-items: center; gap: 1px;
   padding: 7px 12px; border-radius: 12px; white-space: nowrap;
   background: var(--eleg-float); color: var(--eleg-text); box-shadow: var(--eleg-pop);
