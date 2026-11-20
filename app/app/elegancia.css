@@ -161,3 +161,36 @@
 [data-theme="dark"] .eleg-tile { background: linear-gradient(180deg, #ffffff0f, #ffffff05), #1a1b22; color: var(--eleg-text); border: 1px solid #ffffff17; box-shadow: inset 3px 0 0 var(--punto), inset 0 1px #ffffff1a; }
 /* Avatar de la persona con el acento (como el prototipo) */
 .eleg-usuario span[class*="rounded-full"] { background: var(--eleg-logo); color: var(--eleg-on-logo); font-weight: 700; }
+
+/* ── Gráfica interactiva de gasto ── */
+.eleg-grafico-caja { position: relative; }
+.eleg-grafico { cursor: crosshair; overflow: visible; }
+.eleg-area { fill: url(#eleg-area-grad); opacity: 1; }
+.eleg-area-tope { stop-color: #f27d5f; stop-opacity: .28; }
+.eleg-area-base { stop-color: #f27d5f; stop-opacity: 0; }
+[data-theme="dark"] .eleg-area { fill: url(#eleg-area-grad); opacity: 1; }
+[data-theme="dark"] .eleg-area-tope { stop-color: #8f92ff; stop-opacity: .35; }
+[data-theme="dark"] .eleg-area-base { stop-color: #8f92ff; stop-opacity: 0; }
+.eleg-linea-anim { stroke-dasharray: 1; stroke-dashoffset: 1; animation: eleg-dibujar 1.4s cubic-bezier(.2, .8, .2, 1) .1s forwards; }
+.eleg-area-anim { opacity: 0; animation: eleg-aparecer .9s ease .6s forwards; }
+@keyframes eleg-dibujar { to { stroke-dashoffset: 0; } }
+@keyframes eleg-aparecer { to { opacity: 1; } }
+.eleg-guia { stroke: var(--eleg-text); opacity: .35; }
+.eleg-halo { fill: #f27d5f; opacity: .22; animation: eleg-latido 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.eleg-punto-dia { fill: #fff; stroke: #f27d5f; stroke-width: 2.4; }
+[data-theme="dark"] .eleg-halo { fill: #c9cbff; opacity: .3; }
+[data-theme="dark"] .eleg-punto-dia { fill: #fff; stroke: #c9cbff; filter: drop-shadow(0 0 6px #c9cbff); }
+@keyframes eleg-latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.5); } }
+.eleg-marca-dia circle, .eleg-marca-dia line { transition: cx .12s ease, cy .12s ease, x1 .12s ease, x2 .12s ease; }
+.eleg-eje-on { fill: var(--eleg-text) !important; font-weight: 700; }
+.eleg-burbuja {
+  position: absolute; transform: translate(-50%, calc(-100% - 14px)); pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 7px 12px; border-radius: 12px; white-space: nowrap;
+  background: var(--eleg-float); color: var(--eleg-text); box-shadow: var(--eleg-pop);
+  border: 1px solid var(--eleg-rim); transition: left .12s ease, top .12s ease;
+}
+.eleg-burbuja b { font-size: 15px; font-weight: 700; }
+.eleg-burbuja span { font-size: 11.5px; opacity: .7; }
+[data-theme="dark"] .eleg-burbuja { background: #1e2030e6; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 10px 30px -10px #000, 0 0 18px -6px #8f92ffaa; }
+@media (prefers-reduced-motion: reduce) { .eleg-linea-anim, .eleg-area-anim, .eleg-halo { animation: none; stroke-dashoffset: 0; opacity: 1; } }

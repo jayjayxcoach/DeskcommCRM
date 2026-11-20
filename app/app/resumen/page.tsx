@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { GraficoGasto } from "@/components/elegancia/GraficoGasto";
 import { Card } from "@/components/ui/card";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
@@ -199,7 +200,12 @@ export default async function ResumenPage() {
                 <Link href="/app/settings/meta-ads" className="underline underline-offset-4">Configuración › Meta Ads</Link> para ver el gasto diario.
               </p>
             ) : (
-              <Grafico porDia={fbDiario} desde={desde} />
+              <GraficoGasto
+                dias={Array.from({ length: 42 }, (_, i) => {
+                  const k = new Date(new Date(`${desde}T12:00:00Z`).getTime() + i * 864e5).toISOString().slice(0, 10);
+                  return [k, (fbDiario[k] ?? 0) / 100] as [string, number];
+                })}
+              />
             )}
           </Card>
         )}
@@ -312,48 +318,6 @@ export default async function ResumenPage() {
         </Card>
       </div>
     </div>
-  );
-}
-
-/* ── Gráfica del prototipo: gasto diario en Facebook, últimas 6 semanas ── */
-function Grafico({ porDia, desde }: { porDia: Record<string, number>; desde: string }) {
-  const dias: Array<[string, number]> = [];
-  const inicio = new Date(`${desde}T12:00:00Z`).getTime();
-  for (let i = 0; i < 42; i++) {
-    const k = new Date(inicio + i * 864e5).toISOString().slice(0, 10);
-    dias.push([k, (porDia[k] ?? 0) / 100]);
-  }
-  const W = 640;
-  const H = 160;
-  const tope = Math.max(...dias.map(([, v]) => v));
-  const max = Math.max(4, Math.ceil(tope / 2) * 2);
-  const bw = W / dias.length;
-  const y = (v: number) => H - 22 - (v / max) * (H - 44);
-  const path = dias.map(([, v], i) => `${i ? "L" : "M"}${(i * bw + bw / 2).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
-  return (
-    <>
-      <svg viewBox={`0 0 ${W} ${H}`} className="eleg-grafico" style={{ width: "100%", marginTop: 18 }}>
-        {[0, max / 2, max].map((v) => (
-          <g key={v}>
-            <line x1={34} x2={W} y1={y(v)} y2={y(v)} className="eleg-rejilla" strokeDasharray="3 5" />
-            <text x={0} y={y(v) + 4}>${v}</text>
-          </g>
-        ))}
-        <path d={`${path} L${W - bw / 2} ${H - 22} L${bw / 2} ${H - 22}Z`} className="eleg-area" />
-        <path d={path} className="eleg-linea" fill="none" strokeWidth={2.4} strokeLinejoin="round" />
-        {dias
-          .filter((_, i) => i % 7 === 0)
-          .map(([k], j) => (
-            <text key={k} x={j * 7 * bw + bw / 2} y={H - 2}>
-              {fecha(k)}
-            </text>
-          ))}
-      </svg>
-      <div className="flex items-center gap-2 text-[13px] text-text-muted">
-        <span className="eleg-ley" />
-        Gasto diario en Facebook Ads · últimas 6 semanas
-      </div>
-    </>
   );
 }
 
