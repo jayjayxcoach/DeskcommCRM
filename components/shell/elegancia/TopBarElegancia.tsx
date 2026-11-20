@@ -15,12 +15,24 @@ import { setActiveOrg } from "@/app/actions/shell/setActiveOrg";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useActiveOrg, useUser } from "@/hooks/auth/AuthProvider";
 
-import { AlertsBell } from "../AlertsBell";
+import { useAgentInbox } from "@/hooks/ai/useAgentInbox";
 import { useOrganizationTransition } from "../OrganizationTransitionProvider";
 import { UserMenu } from "../UserMenu";
 import { useCuentaBandeja } from "./DockElegancia";
 import { MENU, estaActiva } from "./destinos";
 import { Icono } from "./Iconos";
+
+/** Avisos (Central de avisos): siempre visible, con punto rojo cuando hay pendientes. */
+function Avisos() {
+  const { data } = useAgentInbox("open");
+  const n = data?.open_count ?? 0;
+  return (
+    <Link className="eleg-cb" href="/app/ai/inbox" aria-label={n > 0 ? `Avisos — ${n} abiertos` : "Avisos"}>
+      <Icono nombre="bell" />
+      {n > 0 && <span className="eleg-punto" />}
+    </Link>
+  );
+}
 
 function Marca() {
   const user = useUser();
@@ -92,9 +104,7 @@ export function TopBarElegancia() {
         <Link className="eleg-cb" href="/app/inbox?filter=all" aria-label="Bandeja">
           <Icono nombre="inbox" />
         </Link>
-        <div className="eleg-cb eleg-campana">
-          <AlertsBell />
-        </div>
+        <Avisos />
         <div className="eleg-usuario">
           <UserMenu />
         </div>

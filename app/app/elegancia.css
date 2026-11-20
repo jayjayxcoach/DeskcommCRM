@@ -118,9 +118,7 @@
 .eleg-tabs a b { font-size: 10.5px; background: #e0563f; color: #fff; padding: 1px 7px; border-radius: 99px; }
 .eleg-acts { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
 .eleg-cb { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--eleg-text); flex: none; }
-.eleg-campana > *, .eleg-campana button, .eleg-campana a {
-  width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; background: transparent !important; border: 0; color: inherit;
-}
+.eleg-punto { position: absolute; top: 10px; right: 11px; width: 8px; height: 8px; border-radius: 50%; background: #e0563f; box-shadow: 0 0 0 2px var(--eleg-float); }
 /* Del menú de la persona solo queda el avatar (el tema vive en la barra lateral). */
 .eleg-usuario > div > :not(:last-child) { display: none !important; }
 .eleg-usuario button { width: 46px; height: 46px; border-radius: 50%; }
