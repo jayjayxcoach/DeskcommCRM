@@ -163,6 +163,13 @@ export default async function ResumenPage() {
     .reduce((a, [, v]) => a + v, 0);
   const iaMes = ia[0]?.centavos ?? 0;
   const queda = vendido - fbMes - iaMes;
+  // Ventas cerradas por día (en dólares), para la etiqueta "Ganado" de la gráfica.
+  const ventasPorDia: Record<string, number> = {};
+  for (const l of ganados) {
+    if (!l.closed_at) continue;
+    const dia = new Date(new Date(l.closed_at).getTime() - 5 * 3600e3).toISOString().slice(0, 10); // hora de Ecuador
+    ventasPorDia[dia] = (ventasPorDia[dia] ?? 0) + aDolares(l.value_cents, l.currency);
+  }
   const enlace = (id: string) => (funil ? `/app/pipelines/${funil.id}?lead=${id}` : "/app/kanban");
 
   return (
@@ -203,7 +210,7 @@ export default async function ResumenPage() {
               <GraficoGasto
                 dias={Array.from({ length: 42 }, (_, i) => {
                   const k = new Date(new Date(`${desde}T12:00:00Z`).getTime() + i * 864e5).toISOString().slice(0, 10);
-                  return [k, (fbDiario[k] ?? 0) / 100] as [string, number];
+                  return [k, (fbDiario[k] ?? 0) / 100, (ventasPorDia[k] ?? 0) / 100] as [string, number, number];
                 })}
               />
             )}
