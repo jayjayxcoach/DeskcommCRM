@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { Card } from "@/components/ui/card";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
@@ -11,6 +12,7 @@ import {
   dinero,
   eventoDe,
   gastoDeIa,
+  gastoDiarioDeFacebook,
   sumaPorMoneda,
   ultimosMeses,
 } from "@/lib/elegancia/datos";
@@ -43,8 +45,11 @@ interface Etapa {
   is_lost: boolean;
 }
 
-const COLORES = ["#7d6ee6", "#3d8fdb", "#c99a13", "#6f9a16", "#e0623f", "#d24f84", "#2e9e8f", "#8e948f"];
+/* Colores del prototipo: punto de cada etapa y fondo pastel de su tarjeta. */
+const PUNTOS = ["#7d6ee6", "#3d8fdb", "#c99a13", "#6f9a16", "#e0623f", "#d24f84", "#2e9e8f", "#8e948f"];
+const PASTELES = ["#c9c3f1", "#a8cdee", "#f0db8e", "#cfe58a", "#f2a891", "#efaac4", "#22272a", "#d9dcd6"];
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const MESES_LARGOS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 function fecha(d: string): string {
   const x = new Date(`${d.slice(0, 10)}T12:00:00Z`);
@@ -58,6 +63,10 @@ function hace(iso: string | null): string {
   if (h < 24) return `hace ${Math.round(h)} h`;
   const d = Math.round(h / 24);
   return d === 1 ? "ayer" : `hace ${d} días`;
+}
+function iniciales(t: string): string {
+  const w = t.replace(/[^\p{L}\s·]/gu, "").split(/[\s·]+/).filter(Boolean);
+  return ((w[0] ?? "?").charAt(0) + (w[1] ?? "").charAt(0)).toUpperCase();
 }
 
 export default async function ResumenPage() {
@@ -96,17 +105,27 @@ export default async function ResumenPage() {
 
   const etapas = (etapasCrudas ?? []) as Etapa[];
   const leads = (leadsCrudos ?? []) as Lead[];
-  const mes = new Date().toISOString().slice(0, 7);
+  const hoyIso = new Date().toISOString().slice(0, 10);
+  const mes = hoyIso.slice(0, 7);
   const abiertos = leads.filter((l) => l.status === "open");
-  const ganadosMes = leads.filter((l) => l.status === "won" && (l.closed_at ?? "").startsWith(mes));
+  const ganados = leads.filter((l) => l.status === "won");
+  const ganadosMes = ganados.filter((l) => (l.closed_at ?? "").startsWith(mes));
   const nuevosMes = leads.filter((l) => l.created_at.startsWith(mes));
   const deAnuncio = nuevosMes.filter((l) => (l.tags ?? []).some((t) => t.toLowerCase() === "meta_ads")).length;
 
   const etapasAbiertas = etapas.filter((e) => !e.is_won && !e.is_lost);
   const porEtapa = etapasAbiertas.map((e, i) => {
     const ls = abiertos.filter((l) => l.stage_id === e.id);
-    return { ...e, color: e.color ?? COLORES[i % COLORES.length]!, n: ls.length, valor: sumaPorMoneda(ls) };
+    return {
+      ...e,
+      punto: e.color ?? PUNTOS[i % PUNTOS.length]!,
+      pastel: PASTELES[i % PASTELES.length]!,
+      oscura: i === 6,
+      n: ls.length,
+      valor: sumaPorMoneda(ls),
+    };
   });
+  const infoEtapa = new Map(porEtapa.map((e) => [e.id, e]));
   const totalAbiertos = Math.max(1, porEtapa.reduce((a, e) => a + e.n, 0));
 
   const posicion = new Map(etapasAbiertas.map((e, i) => [e.id, i]));
@@ -118,187 +137,333 @@ export default async function ResumenPage() {
         (b.last_activity_at ?? b.updated_at).localeCompare(a.last_activity_at ?? a.updated_at),
     )
     .slice(0, 6);
-  const nombreEtapa = new Map(etapas.map((e) => [e.id, e.name]));
-  const colorEtapa = new Map(porEtapa.map((e) => [e.id, e.color]));
-
-  const hoy = new Date().toISOString().slice(0, 10);
   const proximos = abiertos
-    .filter((l) => l.expected_close_date && l.expected_close_date >= hoy)
+    .filter((l) => l.expected_close_date && l.expected_close_date >= hoyIso)
     .sort((a, b) => (a.expected_close_date! > b.expected_close_date! ? 1 : -1))
     .slice(0, 5);
   const actividad = [...leads]
     .sort((a, b) => (b.last_activity_at ?? b.updated_at).localeCompare(a.last_activity_at ?? a.updated_at))
     .slice(0, 6);
-
-  const eventos = [...EVENTOS_ORDEN, { tag: "otro", nombre: "Sin tipo / otros", color: "#8e948f" }].map((e) => ({
+  const eventos = [...EVENTOS_ORDEN, { tag: "otro", nombre: "Otros", color: "#8e948f" }].map((e) => ({
     ...e,
     n: abiertos.filter((l) => eventoDe(l.tags) === e.tag).length,
   }));
-  const maxEvento = Math.max(1, ...eventos.map((e) => e.n));
+  const nombreEvento = (l: Lead) => EVENTOS_ORDEN.find((x) => x.tag === eventoDe(l.tags))?.nombre ?? "Otro";
 
-  const verGastos = ROLE_RANK[org.role] >= ROLE_RANK.manager;
-  const ia = verGastos ? await gastoDeIa(createAdminClient(), org.orgId, ultimosMeses(1)) : [];
+  // Lo que entra y lo que sale (solo gerente o administrador)
+  const verDinero = ROLE_RANK[org.role] >= ROLE_RANK.manager;
+  const desde = new Date(Date.now() - 41 * 864e5).toISOString().slice(0, 10);
+  const admin = createAdminClient();
+  const ia = verDinero ? await gastoDeIa(admin, org.orgId, ultimosMeses(1)) : [];
+  const fbDiario = verDinero ? await gastoDiarioDeFacebook(admin, org.orgId, desde, hoyIso) : null;
+  const vendido = ganadosMes.reduce((a, l) => a + aDolares(l.value_cents, l.currency), 0);
+  const fbMes = Object.entries(fbDiario ?? {})
+    .filter(([k]) => k.startsWith(mes))
+    .reduce((a, [, v]) => a + v, 0);
+  const iaMes = ia[0]?.centavos ?? 0;
+  const queda = vendido - fbMes - iaMes;
   const enlace = (id: string) => (funil ? `/app/pipelines/${funil.id}?lead=${id}` : "/app/kanban");
 
   return (
-    <div className="flex flex-col gap-5 p-6">
-      <header className="flex flex-wrap items-end gap-x-10 gap-y-4">
-        <h1 className="max-w-xs text-4xl font-semibold leading-tight tracking-tight">Resumen de ventas</h1>
-        <Dato titulo="Vendido este mes" valor={sumaPorMoneda(ganadosMes)} extra={`${ganadosMes.length} pago${ganadosMes.length === 1 ? "" : "s"}`} />
-        <Dato titulo={`En el embudo · ${abiertos.length} pedidos`} valor={sumaPorMoneda(abiertos)} />
-        <Dato titulo="Clientes nuevos este mes" valor={String(nuevosMes.length)} extra={`${deAnuncio} por anuncio`} />
+    <div className="eleg-resumen flex flex-col gap-5 p-2 sm:p-4">
+      <header className="flex flex-wrap items-center gap-x-10 gap-y-4">
+        <h1 className="max-w-[300px] text-[clamp(34px,3.4vw,52px)] font-semibold leading-[1.02] tracking-[-0.025em]">Resumen de ventas</h1>
+        <Dato icono="trofeo" valor={dinero(vendido)} extra={`${ganadosMes.length} pago${ganadosMes.length === 1 ? "" : "s"}`} titulo="Vendido este mes" />
+        <Dato icono="tendencia" valor={sumaPorMoneda(abiertos)} titulo={`En el embudo · ${abiertos.length} pedidos`} />
+        <Dato icono="correo" valor={String(nuevosMes.length)} extra={`${deAnuncio} por anuncio`} extraCeleste titulo="Clientes nuevos este mes" />
       </header>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-        <Card className="p-5 xl:col-span-8">
+        {verDinero && (
+          <Card className="p-[18px] xl:col-span-7">
+            <Titulo texto="Lo que entra y lo que sale" nota={MESES_LARGOS[Number(mes.slice(5, 7)) - 1]} enlace="/app/finanzas" />
+            <div className="flex flex-wrap items-end gap-[clamp(18px,3vw,40px)]">
+              <div>
+                <div className="eleg-big">{dinero(vendido)}</div>
+                <div className="mt-1.5 text-[13px] text-text-muted">vendido</div>
+              </div>
+              <div>
+                <div className="eleg-big eleg-malo">−{dinero(fbMes + iaMes, "USD", 2)}</div>
+                <div className="mt-1.5 text-[13px] text-text-muted">
+                  Facebook {fbDiario === null ? "—" : dinero(fbMes, "USD", 2)} · IA {dinero(iaMes, "USD", 2)}
+                </div>
+              </div>
+              <div>
+                <div className={`eleg-big ${queda >= 0 ? "eleg-bueno" : "eleg-malo"}`}>{dinero(queda, "USD", 2)}</div>
+                <div className="mt-1.5 text-[13px] text-text-muted">queda</div>
+              </div>
+            </div>
+            {fbDiario === null ? (
+              <p className="mt-6 text-sm text-text-muted">
+                Conecta Meta Ads en{" "}
+                <Link href="/app/settings/meta-ads" className="underline underline-offset-4">Configuración › Meta Ads</Link> para ver el gasto diario.
+              </p>
+            ) : (
+              <Grafico porDia={fbDiario} desde={desde} />
+            )}
+          </Card>
+        )}
+
+        <Card className={`p-[18px] ${verDinero ? "xl:col-span-5" : "xl:col-span-12"}`}>
+          <Titulo texto="Pedidos calientes" nota="más cerca de pagar" />
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {calientes.length === 0 && <p className="text-sm text-text-muted">Nada por ahora.</p>}
+            {calientes.map((l) => {
+              const e = infoEtapa.get(l.stage_id);
+              return (
+                <Link
+                  key={l.id}
+                  href={enlace(l.id)}
+                  className={`eleg-tile ${e?.oscura ? "ink" : ""}`}
+                  style={{ ["--bgc" as string]: e?.pastel, ["--punto" as string]: e?.punto }}
+                >
+                  <div className="d">{l.expected_close_date ? `Evento ${fecha(l.expected_close_date)}` : "Sin fecha"}</div>
+                  <div className="n">{l.title}</div>
+                  <div className="d">{e?.name}</div>
+                  <div className="v">
+                    {l.value_cents ? dinero(aDolares(l.value_cents, l.currency)) : "—"}
+                    <span>{nombreEvento(l)}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card className="p-[18px] xl:col-span-4">
+          <Titulo texto="Por tipo de evento" nota="pedidos abiertos" />
+          <Dona eventos={eventos} />
+        </Card>
+
+        <Card className="p-[18px] xl:col-span-8">
           <Titulo texto="Cómo está el embudo" enlace={funil ? `/app/pipelines/${funil.id}` : undefined} />
-          <div className="mb-1 flex items-baseline gap-3">
-            <span className="text-3xl font-semibold tracking-tight">{sumaPorMoneda(abiertos)}</span>
-            <span className="text-sm text-text-muted">en {abiertos.length} pedidos abiertos</span>
+          <div className="flex items-baseline gap-2.5">
+            <span className="eleg-big" style={{ fontSize: 34 }}>{sumaPorMoneda(abiertos)}</span>
+            <span className="text-[13px] text-text-muted">en {abiertos.length} pedidos abiertos</span>
           </div>
-          <div className="my-4 flex h-3 gap-1 overflow-hidden rounded-full">
-            {porEtapa.filter((e) => e.n > 0).map((e) => (
-              <i key={e.id} title={`${e.name}: ${e.n}`} style={{ flex: e.n, background: e.color }} className="block rounded-full" />
-            ))}
+          <div className="mb-1.5 mt-4 flex h-3 gap-[3px] overflow-hidden rounded-full">
+            {porEtapa
+              .filter((e) => e.n > 0)
+              .map((e) => (
+                <i key={e.id} title={`${e.name}: ${e.n}`} style={{ flex: e.n, background: e.punto }} className="block rounded-full" />
+              ))}
           </div>
-          <table className="w-full text-sm">
+          <table className="w-full text-[13.5px]">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wider text-text-subtle">
-                <th className="py-2 font-semibold">Etapa</th>
-                <th className="py-2 text-right font-semibold">Pedidos</th>
-                <th className="py-2 text-right font-semibold">Valor</th>
-                <th className="py-2 text-right font-semibold">%</th>
+              <tr className="text-left text-[11px] uppercase tracking-[.06em] text-text-subtle">
+                <th className="px-2.5 py-2 font-bold">Etapa</th>
+                <th className="px-2.5 py-2 text-right font-bold">Pedidos</th>
+                <th className="px-2.5 py-2 text-right font-bold">Valor</th>
+                <th className="px-2.5 py-2 text-right font-bold">%</th>
               </tr>
             </thead>
             <tbody>
               {porEtapa.map((e) => (
                 <tr key={e.id} className="border-t border-border">
-                  <td className="py-2.5">
+                  <td className="px-2.5 py-[11px]">
                     <span className="inline-flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: e.color }} />
+                      <span className="h-[9px] w-[9px] rounded-full" style={{ background: e.punto }} />
                       {e.name}
                     </span>
                   </td>
-                  <td className="py-2.5 text-right font-semibold">{e.n}</td>
-                  <td className="py-2.5 text-right font-semibold">{e.valor}</td>
-                  <td className="py-2.5 text-right">{Math.round((e.n / totalAbiertos) * 100)}%</td>
+                  <td className="px-2.5 py-[11px] text-right font-semibold">{e.n}</td>
+                  <td className="px-2.5 py-[11px] text-right font-semibold">{e.valor}</td>
+                  <td className="px-2.5 py-[11px] text-right">{Math.round((e.n / totalAbiertos) * 100)}%</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </Card>
 
-        <Card className="p-5 xl:col-span-4">
-          <Titulo texto="Por tipo de evento" nota="pedidos abiertos" />
-          <div className="flex flex-col gap-3">
-            {eventos.map((e) => (
-              <div key={e.tag}>
-                <div className="mb-1 flex justify-between text-sm">
-                  <span>{e.nombre}</span>
-                  <span className="font-semibold">{e.n}</span>
-                </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-surface-elevated">
-                  <div className="h-full rounded-full" style={{ width: `${(e.n / maxEvento) * 100}%`, background: e.color }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="p-5 xl:col-span-7">
-          <Titulo texto="Pedidos calientes" nota="más cerca de pagar" />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {calientes.length === 0 && <p className="text-sm text-text-muted">Nada por ahora.</p>}
-            {calientes.map((l) => (
-              <Link key={l.id} href={enlace(l.id)} className="rounded-2xl border border-border p-4 transition-colors hover:bg-surface-elevated">
-                <div className="flex items-center gap-2 text-xs text-text-muted">
-                  <span className="h-2 w-2 rounded-full" style={{ background: colorEtapa.get(l.stage_id) }} />
-                  {nombreEtapa.get(l.stage_id)}
-                  {l.expected_close_date ? ` · Fiesta ${fecha(l.expected_close_date)}` : ""}
-                </div>
-                <div className="mt-1.5 truncate font-semibold">{l.title}</div>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-lg font-bold">{l.value_cents ? dinero(aDolares(l.value_cents, l.currency)) : "—"}</span>
-                  <span className="text-xs text-text-muted">{EVENTOS_ORDEN.find((e) => e.tag === eventoDe(l.tags))?.nombre ?? "Otro"}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="p-5 xl:col-span-5">
+        <Card className="p-[18px] xl:col-span-6">
           <Titulo texto="Próximos eventos" nota="fecha de la fiesta" />
           <Filas
-            vacio="Ningún pedido tiene fecha de fiesta próxima."
+            vacio="Nada próximo"
             filas={proximos.map((l) => ({
               id: l.id,
               href: enlace(l.id),
-              izquierda: fecha(l.expected_close_date!),
+              izquierda: <span className="eleg-chip">{fecha(l.expected_close_date!)}</span>,
               titulo: l.title,
-              sub: nombreEtapa.get(l.stage_id) ?? "",
+              sub: `${infoEtapa.get(l.stage_id)?.name ?? ""} · ${nombreEvento(l)}`,
               derecha: l.value_cents ? dinero(aDolares(l.value_cents, l.currency)) : "",
+              fuerte: true,
             }))}
           />
         </Card>
 
-        <Card className="p-5 xl:col-span-7">
+        <Card className="p-[18px] xl:col-span-6">
           <Titulo texto="Actividad reciente" />
           <Filas
             vacio="Sin actividad."
             filas={actividad.map((l) => ({
               id: l.id,
               href: enlace(l.id),
-              izquierda: "",
+              izquierda: (
+                <span className="eleg-av" style={{ background: EVENTOS_ORDEN.find((x) => x.tag === eventoDe(l.tags))?.color ?? "#8e948f" }}>
+                  {iniciales(l.title)}
+                </span>
+              ),
               titulo: l.title,
-              sub: l.status === "won" ? "Pagó · venta cerrada" : l.status === "lost" ? "No compró" : `Está en ${nombreEtapa.get(l.stage_id) ?? ""}`,
+              sub: l.status === "won" ? "Pagó · Venta cerrada" : l.status === "lost" ? "No compró" : `Está en ${infoEtapa.get(l.stage_id)?.name ?? ""}`,
               derecha: hace(l.last_activity_at ?? l.updated_at),
+              fuerte: false,
             }))}
           />
         </Card>
-
-        {verGastos && (
-          <Card className="p-5 xl:col-span-5">
-            <Titulo texto="Gastos del mes" enlace="/app/finanzas" />
-            <div className="flex flex-col gap-3 text-sm">
-              <div className="flex justify-between border-b border-border pb-3">
-                <span>IA del CRM</span>
-                <span className="font-semibold">{dinero(ia[0]?.centavos ?? 0, "USD", 2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Publicidad en Facebook</span>
-                <Link href="/app/finanzas" className="font-semibold underline-offset-4 hover:underline">
-                  Ver en Finanzas
-                </Link>
-              </div>
-            </div>
-          </Card>
-        )}
       </div>
     </div>
   );
 }
 
-function Dato({ titulo, valor, extra }: { titulo: string; valor: string; extra?: string }) {
+/* ── Gráfica del prototipo: gasto diario en Facebook, últimas 6 semanas ── */
+function Grafico({ porDia, desde }: { porDia: Record<string, number>; desde: string }) {
+  const dias: Array<[string, number]> = [];
+  const inicio = new Date(`${desde}T12:00:00Z`).getTime();
+  for (let i = 0; i < 42; i++) {
+    const k = new Date(inicio + i * 864e5).toISOString().slice(0, 10);
+    dias.push([k, (porDia[k] ?? 0) / 100]);
+  }
+  const W = 640;
+  const H = 160;
+  const tope = Math.max(...dias.map(([, v]) => v));
+  const max = Math.max(4, Math.ceil(tope / 2) * 2);
+  const bw = W / dias.length;
+  const y = (v: number) => H - 22 - (v / max) * (H - 44);
+  const path = dias.map(([, v], i) => `${i ? "L" : "M"}${(i * bw + bw / 2).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
   return (
-    <div>
-      <div className="flex items-center gap-2 text-xl font-semibold tracking-tight">
-        {valor}
-        {extra && <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold text-accent-foreground">{extra}</span>}
+    <>
+      <svg viewBox={`0 0 ${W} ${H}`} className="eleg-grafico" style={{ width: "100%", marginTop: 18 }}>
+        {[0, max / 2, max].map((v) => (
+          <g key={v}>
+            <line x1={34} x2={W} y1={y(v)} y2={y(v)} className="eleg-rejilla" strokeDasharray="3 5" />
+            <text x={0} y={y(v) + 4}>${v}</text>
+          </g>
+        ))}
+        <path d={`${path} L${W - bw / 2} ${H - 22} L${bw / 2} ${H - 22}Z`} className="eleg-area" />
+        <path d={path} className="eleg-linea" fill="none" strokeWidth={2.4} strokeLinejoin="round" />
+        {dias
+          .filter((_, i) => i % 7 === 0)
+          .map(([k], j) => (
+            <text key={k} x={j * 7 * bw + bw / 2} y={H - 2}>
+              {fecha(k)}
+            </text>
+          ))}
+      </svg>
+      <div className="flex items-center gap-2 text-[13px] text-text-muted">
+        <span className="eleg-ley" />
+        Gasto diario en Facebook Ads · últimas 6 semanas
       </div>
-      <div className="text-xs text-text-muted">{titulo}</div>
+    </>
+  );
+}
+
+/* ── Dona del prototipo: pedidos abiertos por tipo de evento ── */
+function Dona({ eventos }: { eventos: Array<{ tag: string; nombre: string; color: string; n: number }> }) {
+  const tot = eventos.reduce((a, e) => a + e.n, 0) || 1;
+  const R = 66;
+  const C = 2 * Math.PI * R;
+  const xv = eventos.find((e) => e.tag === "xv")?.n ?? 0;
+  let a = 0;
+  const arcos = eventos
+    .filter((e) => e.n)
+    .map((e) => {
+      const l = (e.n / tot) * C;
+      const desde = a;
+      a += l;
+      return { e, l, desde };
+    });
+  return (
+    <div className="flex flex-wrap items-center gap-5">
+      <svg width={170} height={170} viewBox="0 0 170 170" className="eleg-dona">
+        <circle r={R} cx={85} cy={85} fill="none" className="eleg-dona-fondo" strokeWidth={16} />
+        {arcos.map(({ e, l, desde }) => (
+          <circle
+            key={e.tag}
+            r={R}
+            cx={85}
+            cy={85}
+            fill="none"
+            stroke={e.color}
+            strokeWidth={16}
+            strokeDasharray={`${Math.max(l - 4, 1)} ${C}`}
+            strokeDashoffset={-desde}
+            transform="rotate(-90 85 85)"
+            strokeLinecap="round"
+          />
+        ))}
+        <text x={85} y={84} textAnchor="middle" className="eleg-dona-pct">
+          {Math.round((xv / tot) * 100)}%
+        </text>
+        <text x={85} y={104} textAnchor="middle">
+          son XV años
+        </text>
+      </svg>
+      <div className="min-w-[150px] flex-1">
+        {eventos.map((e, i) => (
+          <div key={e.tag} className={`flex items-center py-[7px] ${i ? "border-t border-border" : ""}`}>
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold">
+              <span className="h-[7px] w-[7px] rounded-full" style={{ background: e.color }} />
+              {e.nombre}
+            </span>
+            <span className="ml-auto font-semibold">{e.n}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const ICONOS_DATO: Record<string, ReactNode> = {
+  trofeo: (
+    <>
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
+    </>
+  ),
+  tendencia: (
+    <>
+      <path d="m22 7-8.5 8.5-5-5L2 17" />
+      <path d="M16 7h6v6" />
+    </>
+  ),
+  correo: (
+    <>
+      <rect x="2" y="4" width="20" height="16" rx="2.5" />
+      <path d="m22 7-10 6L2 7" />
+    </>
+  ),
+};
+
+function Dato({ icono, valor, extra, extraCeleste, titulo }: { icono: string; valor: string; extra?: string; extraCeleste?: boolean; titulo: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="eleg-si">
+        <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+          {ICONOS_DATO[icono]}
+        </svg>
+      </div>
+      <div>
+        <div className="flex items-center gap-2.5 text-[21px] font-semibold tracking-[-0.01em]">
+          {valor}
+          {extra && <span className={`eleg-badge ${extraCeleste ? "celeste" : ""}`}>{extra}</span>}
+        </div>
+        <div className="max-w-[170px] text-[12.5px] leading-tight text-text-muted">{titulo}</div>
+      </div>
     </div>
   );
 }
 
 function Titulo({ texto, nota, enlace }: { texto: string; nota?: string; enlace?: string }) {
   return (
-    <h2 className="mb-4 flex items-center gap-3 text-[15px] font-semibold">
+    <h2 className="mb-3.5 flex items-center gap-2.5 text-[15px] font-semibold">
       {texto}
-      <span className="ml-auto flex items-center gap-2 text-xs font-medium text-text-subtle">
+      <span className="ml-auto flex items-center gap-2 text-[12.5px] font-semibold text-text-subtle">
         {nota}
         {enlace && (
-          <Link href={enlace} className="grid h-8 w-8 place-items-center rounded-full border border-border hover:bg-surface-elevated" aria-label={`Abrir ${texto}`}>
-            ↗
+          <Link href={enlace} className="eleg-ib" aria-label={`Abrir ${texto}`}>
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 17 17 7M7 7h10v10" />
+            </svg>
           </Link>
         )}
       </span>
@@ -311,21 +476,19 @@ function Filas({
   vacio,
 }: {
   vacio: string;
-  filas: Array<{ id: string; href: string; izquierda: string; titulo: string; sub: string; derecha: string }>;
+  filas: Array<{ id: string; href: string; izquierda: ReactNode; titulo: string; sub: string; derecha: string; fuerte: boolean }>;
 }) {
   if (filas.length === 0) return <p className="text-sm text-text-muted">{vacio}</p>;
   return (
     <div className="flex flex-col">
       {filas.map((f, i) => (
         <Link key={f.id} href={f.href} className={`flex items-center gap-3 py-2.5 ${i ? "border-t border-border" : ""}`}>
-          {f.izquierda && (
-            <span className="shrink-0 rounded-full bg-surface-elevated px-2.5 py-1 text-xs font-semibold">{f.izquierda}</span>
-          )}
+          {f.izquierda}
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold">{f.titulo}</span>
-            <span className="block truncate text-xs text-text-muted">{f.sub}</span>
+            <span className="block truncate text-[12.5px] text-text-muted">{f.sub}</span>
           </span>
-          <span className="ml-auto shrink-0 text-sm text-text-muted">{f.derecha}</span>
+          <span className={`ml-auto shrink-0 whitespace-nowrap text-right ${f.fuerte ? "font-semibold" : "text-text-muted"}`}>{f.derecha}</span>
         </Link>
       ))}
     </div>

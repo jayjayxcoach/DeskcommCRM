@@ -128,3 +128,36 @@
   .eleg-top { grid-template-columns: 1fr auto; padding: 12px 16px 4px; }
   .eleg-tabs { grid-column: 1 / -1; order: 3; }
 }
+
+/* ── Resumen del prototipo: números, gráfica, dona y tarjetas ── */
+.eleg-big { font-size: clamp(32px, 3vw, 46px); font-weight: 600; letter-spacing: -.03em; line-height: 1; color: var(--eleg-text); }
+.eleg-malo { color: #b8401f; }
+.eleg-bueno { color: #3c7a14; }
+[data-theme="dark"] .eleg-malo { color: #ff8a8a; }
+[data-theme="dark"] .eleg-bueno { color: #6fdc9a; }
+[data-theme="dark"] .eleg-big { text-shadow: 0 0 24px #c9cbff40; }
+.eleg-grafico text, .eleg-dona text { font-size: 11px; fill: var(--color-text-subtle, #6b726d); }
+.eleg-rejilla { stroke: var(--eleg-line); }
+.eleg-area { fill: #f27d5f; opacity: .14; }
+.eleg-linea { stroke: #f27d5f; }
+.eleg-ley { width: 9px; height: 9px; border-radius: 50%; background: #f27d5f; flex: none; }
+[data-theme="dark"] .eleg-linea { stroke: #fff; filter: drop-shadow(0 0 4px #c9cbffcc) drop-shadow(0 0 10px #8f92ff88); }
+[data-theme="dark"] .eleg-area { fill: #8f92ff; opacity: .16; }
+[data-theme="dark"] .eleg-ley { background: #fff; box-shadow: 0 0 8px #c9cbff; }
+.eleg-dona-fondo { stroke: var(--eleg-well); }
+.eleg-dona .eleg-dona-pct { font-size: 30px; font-weight: 600; fill: var(--eleg-text); }
+.eleg-si { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--eleg-glass); border: 1px solid var(--eleg-rim); -webkit-backdrop-filter: var(--eleg-blur); backdrop-filter: var(--eleg-blur); color: var(--eleg-text); flex: none; }
+.eleg-badge { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: var(--eleg-logo); color: var(--eleg-on-logo); }
+.eleg-badge.celeste { background: #8cc4ff; color: #13171a; }
+.eleg-ib { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--eleg-line); color: var(--eleg-text); }
+.eleg-chip { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 99px; background: var(--eleg-well); white-space: nowrap; flex: none; }
+.eleg-av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; color: #13171a; }
+.eleg-tile { display: block; border-radius: 18px; padding: 14px; background: var(--bgc); color: #13171a; }
+.eleg-tile.ink { color: #f2f4f0; }
+.eleg-tile .d { font-size: 12px; opacity: .72; font-weight: 600; }
+.eleg-tile .n { font-size: 15px; font-weight: 600; margin: 6px 0 2px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eleg-tile .v { font-size: 19px; font-weight: 700; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+.eleg-tile .v span { font-size: 11px; font-weight: 600; opacity: .75; }
+[data-theme="dark"] .eleg-tile { background: linear-gradient(180deg, #ffffff0f, #ffffff05), #1a1b22; color: var(--eleg-text); border: 1px solid #ffffff17; box-shadow: inset 3px 0 0 var(--punto), inset 0 1px #ffffff1a; }
+/* Avatar de la persona con el acento (como el prototipo) */
+.eleg-usuario span[class*="rounded-full"] { background: var(--eleg-logo); color: var(--eleg-on-logo); font-weight: 700; }

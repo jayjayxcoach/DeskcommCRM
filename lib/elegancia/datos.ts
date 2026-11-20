@@ -8,7 +8,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { lerCredencialDeLeitura } from "@/lib/plataformas-de-anuncio/credenciais-de-leitura";
-import { lerInsights, listarContas } from "@/lib/plataformas-de-anuncio/meta/insights";
+import { lerInsights, listarContas, montarUrl } from "@/lib/plataformas-de-anuncio/meta/insights";
 
 export interface MesDeGasto {
   /** AAAA-MM */
@@ -140,4 +140,50 @@ export const EVENTOS_ORDEN: ReadonlyArray<{ tag: string; nombre: string; color: 
 export function eventoDe(tags: string[] | null): string {
   const t = new Set((tags ?? []).map((x) => x.toLowerCase()));
   return EVENTOS_ORDEN.find((e) => t.has(e.tag))?.tag ?? "otro";
+}
+
+/**
+ * Gasto diario en Meta Ads (todas las cuentas), en centavos por día AAAA-MM-DD.
+ * `null` si no hay conexión; `{}` si la lectura falló.
+ */
+export async function gastoDiarioDeFacebook(
+  admin: SupabaseClient,
+  orgId: string,
+  desde: string,
+  hasta: string,
+): Promise<Record<string, number> | null> {
+  const credencial = await lerCredencialDeLeitura(admin, orgId, "meta_ads");
+  if (!credencial.ok) return null;
+  const token = credencial.credencial.accessToken;
+  const porDia: Record<string, number> = {};
+  try {
+    const contas = await listarContas(token);
+    if (!contas.ok) return porDia;
+    for (const conta of contas.dados) {
+      let url: string | null = montarUrl(`${encodeURIComponent(conta.id)}/insights`, {
+        level: "account",
+        time_increment: "1",
+        time_range: JSON.stringify({ since: desde, until: hasta }),
+        fields: "spend",
+        limit: "100",
+      });
+      for (let pagina = 0; url && pagina < 10; pagina++) {
+        const r: Response = await fetch(url, {
+          headers: { authorization: `Bearer ${token}` },
+          cache: "no-store",
+          signal: AbortSignal.timeout(15000),
+        });
+        if (!r.ok) break;
+        const j = (await r.json()) as { data?: Array<{ spend?: string; date_start?: string }>; paging?: { next?: string } };
+        for (const fila of j.data ?? []) {
+          if (!fila.date_start) continue;
+          porDia[fila.date_start] = (porDia[fila.date_start] ?? 0) + Math.round(Number(fila.spend ?? 0) * 100);
+        }
+        url = j.paging?.next ?? null;
+      }
+    }
+  } catch {
+    return porDia;
+  }
+  return porDia;
 }
