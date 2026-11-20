@@ -42,7 +42,7 @@ interface Etapa {
   is_lost: boolean;
 }
 
-const COLORES = ["#7d6ee6", "#3d8fdb", "#c99a13", "#6f9a16", "#e0623f", "#d24f84", "#13171a", "#8e948f"];
+const COLORES = ["#7d6ee6", "#3d8fdb", "#c99a13", "#6f9a16", "#e0623f", "#d24f84", "#2e9e8f", "#8e948f"];
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
 function fecha(d: string): string {

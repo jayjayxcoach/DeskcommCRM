@@ -49,14 +49,22 @@ function finDelMes(aaaamm: string): string {
 /** Gasto de IA del CRM por mes, desde `llm_calls` (solo lo que tiene precio conocido suma). */
 export async function gastoDeIa(admin: SupabaseClient, orgId: string, meses: string[]): Promise<MesDeGasto[]> {
   const desde = `${meses[0]}-01T00:00:00Z`;
-  const { data } = await admin
-    .from("llm_calls")
-    .select("cost_cents, created_at")
-    .eq("organization_id", orgId)
-    .gte("created_at", desde)
-    .limit(50000);
+  // El servidor devuelve como máximo 1000 filas por consulta: se lee por páginas.
+  const filas: Array<{ cost_cents: number | null; created_at: string }> = [];
+  for (let desdeFila = 0; desdeFila < 200000; desdeFila += 1000) {
+    const { data } = await admin
+      .from("llm_calls")
+      .select("cost_cents, created_at")
+      .eq("organization_id", orgId)
+      .gte("created_at", desde)
+      .order("created_at")
+      .range(desdeFila, desdeFila + 999);
+    const pagina = (data ?? []) as typeof filas;
+    filas.push(...pagina);
+    if (pagina.length < 1000) break;
+  }
   const porMes = new Map(meses.map((m) => [m, { mes: m, centavos: 0, llamadas: 0 }]));
-  for (const fila of (data ?? []) as Array<{ cost_cents: number | null; created_at: string }>) {
+  for (const fila of filas) {
     const m = porMes.get(fila.created_at.slice(0, 7));
     if (!m) continue;
     m.llamadas += 1;
@@ -114,7 +122,7 @@ export function sumaPorMoneda(filas: Array<{ value_cents: number | null; currenc
   }
   if (por.size === 0) return dinero(0);
   return [...por.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => (a[0] === "USD" ? -1 : b[0] === "USD" ? 1 : b[1] - a[1]))
     .map(([m, c]) => dinero(c, m))
     .join(" + ");
 }
