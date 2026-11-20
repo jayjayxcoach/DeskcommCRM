@@ -1,0 +1,132 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   ELEGANCIA — barra lateral y barra superior del prototipo aprobado.
+   Solo existen cuando la organización usa la plantilla "elegancia"
+   (AppShell monta DockElegancia y TopBarElegancia). Claro: vidrio blanco;
+   oscuro: carbón con borde fino y luz lavanda.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --eleg-glass: linear-gradient(155deg, #ffffffa8 0%, #ffffff5c 42%, #ffffff3d 70%, #ffffff6b 100%);
+  --eleg-rim: #ffffff4d;
+  --eleg-blur: blur(30px) saturate(185%);
+  --eleg-shadow: inset 0 1px 0 #ffffffeb, inset 0 0 32px #ffffff45, 0 24px 60px -30px #1e283c4d, 0 2px 6px -2px #1e283c14;
+  --eleg-text: #13171a;
+  --eleg-well: #1216140f;
+  --eleg-line: #1216142e;
+  --eleg-pill: #13171a;
+  --eleg-on-pill: #f6f7f3;
+  --eleg-pill-shadow: none;
+  --eleg-float: #f8faf6;
+  --eleg-pop: 0 24px 60px -18px #0f191459, 0 2px 6px #0f191414;
+  --eleg-logo: #13171a;
+  --eleg-on-logo: #ffffff;
+}
+[data-theme="dark"] {
+  --eleg-glass: radial-gradient(120% 90% at 85% 115%, #7a7cc94d, #0000 60%), linear-gradient(180deg, #ffffff0d, #ffffff00 40%), #15161bd1;
+  --eleg-rim: #ffffff1f;
+  --eleg-shadow: inset 0 1px 0 #ffffff26, 0 30px 60px -24px #000000e6;
+  --eleg-text: #f3f3f7;
+  --eleg-well: #ffffff12;
+  --eleg-line: #ffffff24;
+  --eleg-pill: linear-gradient(90deg, #ffffff1c, #ffffff0a);
+  --eleg-on-pill: #ffffff;
+  --eleg-pill-shadow: inset 0 1px #ffffff2e, inset 0 0 0 1px #ffffff1f;
+  --eleg-float: #1c1d24;
+  --eleg-pop: 0 24px 60px -18px #000000cc, 0 0 0 1px #ffffff1a;
+  --eleg-logo: #c9cbff;
+  --eleg-on-logo: #15161c;
+}
+
+.eleg-i { width: 18px; height: 18px; flex: none; }
+
+/* El vidrio con borde que brilla (como Flowly), en todas las piezas */
+.eleg-dock, .eleg-tabs, .eleg-cb {
+  position: relative;
+  background: var(--eleg-glass);
+  border: 1px solid var(--eleg-rim);
+  box-shadow: var(--eleg-shadow);
+  -webkit-backdrop-filter: var(--eleg-blur);
+  backdrop-filter: var(--eleg-blur);
+}
+:root:not([data-theme="dark"]) .eleg-dock::before,
+:root:not([data-theme="dark"]) .eleg-tabs::before,
+:root:not([data-theme="dark"]) .eleg-cb::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: linear-gradient(140deg, #fff 0%, #ffffffa6 20%, #ffffff1f 50%, #ffffff47 78%, #ffffffd9 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+
+/* ── Barra lateral (pastilla flotante) ── */
+.eleg-dock-lugar {
+  position: sticky; top: var(--faixas-de-cima, 0px); z-index: 30;
+  height: calc(100dvh - var(--faixas-de-cima, 0px));
+  width: 110px; padding-left: 20px;
+  display: flex; align-items: center;
+  transition: width .25s cubic-bezier(.2, .8, .2, 1);
+}
+.eleg-dock-lugar.abierta { width: 292px; }
+.eleg-dock {
+  width: 62px; max-height: calc(100dvh - 40px);
+  border-radius: 999px; padding: 8px;
+  display: flex; flex-direction: column; gap: 4px;
+  color: var(--eleg-text);
+  transition: width .25s cubic-bezier(.2, .8, .2, 1), border-radius .25s;
+}
+.eleg-dock.abierta { width: 244px; border-radius: 28px; }
+.eleg-scroll { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.eleg-scroll::-webkit-scrollbar { display: none; }
+.eleg-sep { height: 1px; background: var(--eleg-line); margin: 4px 10px; flex: none; }
+.eleg-db {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  height: 44px; min-width: 44px; border-radius: 999px; padding: 0 13px;
+  opacity: .74; white-space: nowrap; color: inherit; background: none; border: 0; cursor: pointer;
+  text-align: left; width: 100%;
+}
+.eleg-db:hover, .eleg-db.on { opacity: 1; background: var(--eleg-well); }
+.eleg-dock .eleg-db.on { box-shadow: var(--eleg-pill-shadow); }
+.eleg-lb { display: none; font-weight: 600; font-size: 14px; }
+.eleg-ct { display: none; margin-left: auto; font-size: 11.5px; font-weight: 700; background: #e0563f; color: #fff; padding: 1px 8px; border-radius: 99px; }
+.eleg-tip {
+  position: absolute; left: calc(100% + 14px); top: 0; bottom: 0; margin: auto 0; height: fit-content;
+  background: var(--eleg-float); color: var(--eleg-text); box-shadow: var(--eleg-pop);
+  padding: 6px 10px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+  opacity: 0; pointer-events: none; transition: opacity .18s; white-space: nowrap; z-index: 40;
+}
+.eleg-db:hover .eleg-tip { opacity: 1; }
+.eleg-dock.abierta .eleg-lb { display: block; }
+.eleg-dock.abierta .eleg-ct { display: inline-block; }
+.eleg-dock.abierta .eleg-tip { display: none; }
+
+/* ── Barra superior ── */
+.eleg-top {
+  position: sticky; top: var(--faixas-de-cima, 0px); z-index: 20;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px;
+  padding: 18px clamp(16px, 1.6vw, 28px) 4px 8px;
+  color: var(--eleg-text);
+}
+.eleg-marca {
+  display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 20px; letter-spacing: -.2px;
+  color: var(--eleg-text); background: none; border: 0; cursor: pointer; justify-self: start; min-width: 0;
+}
+.eleg-marca-nombre { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eleg-logo { width: 42px; height: 42px; border-radius: 13px; background: var(--eleg-logo); color: var(--eleg-on-logo); display: grid; place-items: center; flex: none; }
+.eleg-logo .eleg-i { width: 19px; height: 19px; }
+.eleg-tabs { display: flex; gap: 2px; padding: 4px; border-radius: 999px; overflow-x: auto; scrollbar-width: none; }
+.eleg-tabs::-webkit-scrollbar { display: none; }
+.eleg-tabs a { position: relative; z-index: 1; padding: 10px 17px; border-radius: 999px; font-size: 13.5px; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 6px; color: var(--eleg-text); }
+.eleg-tabs a.on { background: var(--eleg-pill); color: var(--eleg-on-pill); box-shadow: var(--eleg-pill-shadow); }
+.eleg-tabs a b { font-size: 10.5px; background: #e0563f; color: #fff; padding: 1px 7px; border-radius: 99px; }
+.eleg-acts { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+.eleg-cb { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--eleg-text); flex: none; }
+.eleg-campana > *, .eleg-campana button, .eleg-campana a {
+  width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; background: transparent !important; border: 0; color: inherit;
+}
+/* Del menú de la persona solo queda el avatar (el tema vive en la barra lateral). */
+.eleg-usuario > div > :not(:last-child) { display: none !important; }
+.eleg-usuario button { width: 46px; height: 46px; border-radius: 50%; }
+.eleg-usuario [data-slot="avatar"], .eleg-usuario span[class*="rounded-full"] { width: 46px; height: 46px; }
+
+@media (max-width: 767px) {
+  .eleg-top { grid-template-columns: 1fr auto; padding: 12px 16px 4px; }
+  .eleg-tabs { grid-column: 1 / -1; order: 3; }
+}

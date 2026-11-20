@@ -3,6 +3,8 @@ import { useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { TopBar } from "@/components/shell/TopBar";
+import { DockElegancia } from "@/components/shell/elegancia/DockElegancia";
+import { TopBarElegancia } from "@/components/shell/elegancia/TopBarElegancia";
 import { BarraInferior } from "@/components/shell/BarraInferior";
 import { BarraDeProgressoNavegacao } from "@/components/shell/BarraDeProgressoNavegacao";
 import { useSinalDePresenca } from "@/hooks/atendimento/useSinalDePresenca";
@@ -25,10 +27,12 @@ interface AppShellProps {
    * 403 a cada minuto em nome de ninguém.
    */
   podeAtender: boolean;
+  /** Plantilla Elegancia: barra lateral y barra superior del prototipo aprobado. */
+  elegancia?: boolean;
   children: ReactNode;
 }
 
-export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellProps) {
+export function AppShell({ sidebarCollapsed, podeAtender, elegancia = false, children }: AppShellProps) {
   useInboundMessageAlerts();
   useInboundCallAlerts();
   useCrmAlerts();
@@ -77,7 +81,7 @@ export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellPr
     <div data-casca="raiz" className="flex min-h-[calc(100dvh-var(--faixas-de-cima,0px))] w-full bg-background">
       <BarraDeProgressoNavegacao />
       <div className="hidden md:block">
-        <Sidebar collapsed={sidebarCollapsed} />
+        {elegancia ? <DockElegancia collapsed={sidebarCollapsed} /> : <Sidebar collapsed={sidebarCollapsed} />}
       </div>
       {/*
         `min-w-0` é o que permite a coluna de conteúdo ENCOLHER. Um flex item
@@ -102,7 +106,7 @@ export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellPr
         data-casca="conteudo"
         className="flex min-h-[calc(100dvh-var(--faixas-de-cima,0px))] min-w-0 flex-1 flex-col"
       >
-        <TopBar />
+        {elegancia ? <TopBarElegancia /> : <TopBar />}
         {/*
           O RODAPÉ DESCONTA O QUE AS PEÇAS FIXAS OCUPAM (issue #1305).
 

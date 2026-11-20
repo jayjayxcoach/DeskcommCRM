@@ -6,6 +6,8 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { modulosLigados } from "@/lib/instalacao/modulos";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { aparenciaDeSettings } from "@/lib/aparencia/ajustes";
+import type { NavGroupId } from "@/lib/navigation/catalogo";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Configurações" };
@@ -32,7 +34,22 @@ export default async function SettingsHubPage() {
   const activeOrg = await resolveActiveOrg(user);
   const idioma = user.idioma;
 
-  const ligados = await modulosLigados(createAdminClient(), activeOrg?.orgId);
+  const admin = createAdminClient();
+  const ligados = await modulosLigados(admin, activeOrg?.orgId);
+  // Plantilla Elegancia: la barra lateral solo tiene lo del prototipo, y TODAS las
+  // demás áreas del CRM viven aquí, en Configuración.
+  let elegancia = false;
+  if (activeOrg) {
+    const { data: org } = await admin.from("organizations").select("settings").eq("id", activeOrg.orgId).maybeSingle();
+    elegancia = aparenciaDeSettings((org as { settings?: unknown } | null)?.settings).template === "elegancia";
+  }
+  const AREAS: Array<{ group: NavGroupId; title: string; subtitle: string }> = [
+    { group: "atendimento", title: "Atención", subtitle: "Bandeja, agenda, respuestas rápidas y lo del día a día." },
+    { group: "crm", title: "CRM", subtitle: "Embudos, contactos, campañas, tareas, productos y propuestas." },
+    { group: "ia", title: "Agente de IA", subtitle: "Agentes, seguimientos, conocimiento, uso y presupuesto." },
+    { group: "canais", title: "Canales", subtitle: "WhatsApp y las demás conexiones." },
+    { group: "analise", title: "Análisis", subtitle: "Rendimiento, Meta Ads, informes y auditoría." },
+  ];
   const agencia =
     ligados.includes("agencias") &&
     activeOrg &&
@@ -58,6 +75,21 @@ export default async function SettingsHubPage() {
         subtitle={traduzir("Sua conta, os dados da empresa e quem tem acesso ao quê.", idioma)}
         locale={idioma}
       />
+      {elegancia &&
+        AREAS.map((a) => (
+          <NavHub
+            key={a.group}
+            group={a.group}
+            isPlatformAdmin={user.is_platform_admin && !user.support}
+            role={activeOrg?.role ?? null}
+            // Sin el filtro del menú: aquí se ve todo lo que el rol permite.
+            interfaceSettings={undefined}
+            modulosLigados={ligados}
+            title={a.title}
+            subtitle={a.subtitle}
+            locale={idioma}
+          />
+        ))}
     </>
   );
 }

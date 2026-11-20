@@ -17,6 +17,7 @@ import { EstiloDaMarcaDaOrganizacao } from "./_components/EstiloDaMarcaDaOrganiz
 import { EstiloDoTemaDaExtensao } from "./_components/EstiloDoTemaDaExtensao";
 import { EstiloDaAparencia } from "./_components/EstiloDaAparencia";
 import "./aparencia.css";
+import "./elegancia.css";
 import { MfaEnrollGate } from "@/components/auth/MfaEnrollGate";
 import { cssDaMarca, ESCOPO_DA_ORGANIZACAO } from "@/lib/branding/css";
 import { cssDaExtensaoDeTema, linhaBrutaDeTema, temaAplicavel } from "@/lib/extensions/tema";
@@ -312,6 +313,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <AppShell
           sidebarCollapsed={collapsed}
           podeAtender={Boolean(activeOrg && roleAtLeast(activeOrg.role, "agent"))}
+          elegancia={aparencia.template === "elegancia"}
         >
           {children}
         </AppShell>
