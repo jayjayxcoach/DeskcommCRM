@@ -7,6 +7,7 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import {
   EVENTOS_ORDEN,
+  aDolares,
   dinero,
   eventoDe,
   gastoDeIa,
@@ -217,7 +218,7 @@ export default async function ResumenPage() {
                 </div>
                 <div className="mt-1.5 truncate font-semibold">{l.title}</div>
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-lg font-bold">{l.value_cents ? dinero(l.value_cents, l.currency ?? "USD") : "—"}</span>
+                  <span className="text-lg font-bold">{l.value_cents ? dinero(aDolares(l.value_cents, l.currency)) : "—"}</span>
                   <span className="text-xs text-text-muted">{EVENTOS_ORDEN.find((e) => e.tag === eventoDe(l.tags))?.nombre ?? "Otro"}</span>
                 </div>
               </Link>
@@ -235,7 +236,7 @@ export default async function ResumenPage() {
               izquierda: fecha(l.expected_close_date!),
               titulo: l.title,
               sub: nombreEtapa.get(l.stage_id) ?? "",
-              derecha: l.value_cents ? dinero(l.value_cents, l.currency ?? "USD") : "",
+              derecha: l.value_cents ? dinero(aDolares(l.value_cents, l.currency)) : "",
             }))}
           />
         </Card>

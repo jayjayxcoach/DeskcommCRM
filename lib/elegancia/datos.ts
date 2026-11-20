@@ -112,19 +112,22 @@ export function dinero(centavos: number, moneda = "USD", decimales = 0): string 
   }
 }
 
-/** Suma por moneda y la escribe junta: "$1.793 + $ 227.000 COP". */
+/**
+ * Elegancia cobra todo en dólares (Payphone). Cuando un pedido quedó anotado en
+ * otra moneda (precio que se le dijo a la clienta en su país), se pasa a dólares
+ * con una tasa aproximada para que los totales salgan en una sola moneda.
+ */
+const TASAS_A_USD: Record<string, number> = { USD: 1, COP: 4000, PEN: 3.75, MXN: 18, ARS: 1000, CLP: 950, EUR: 0.92, BRL: 5.5 };
+
+export function aDolares(centavos: number | null, moneda: string | null): number {
+  if (!centavos) return 0;
+  const tasa = TASAS_A_USD[(moneda ?? "USD").toUpperCase()] ?? 1;
+  return Math.round(centavos / tasa);
+}
+
+/** Total en dólares de una lista de pedidos. */
 export function sumaPorMoneda(filas: Array<{ value_cents: number | null; currency: string | null }>): string {
-  const por = new Map<string, number>();
-  for (const f of filas) {
-    if (!f.value_cents) continue;
-    const m = f.currency ?? "USD";
-    por.set(m, (por.get(m) ?? 0) + f.value_cents);
-  }
-  if (por.size === 0) return dinero(0);
-  return [...por.entries()]
-    .sort((a, b) => (a[0] === "USD" ? -1 : b[0] === "USD" ? 1 : b[1] - a[1]))
-    .map(([m, c]) => dinero(c, m))
-    .join(" + ");
+  return dinero(filas.reduce((a, f) => a + aDolares(f.value_cents, f.currency), 0));
 }
 
 export const EVENTOS_ORDEN: ReadonlyArray<{ tag: string; nombre: string; color: string }> = [

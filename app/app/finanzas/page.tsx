@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
-import { dinero, gastoDeFacebook, gastoDeIa, nombreDelMes, ultimosMeses } from "@/lib/elegancia/datos";
+import { aDolares, dinero, gastoDeFacebook, gastoDeIa, nombreDelMes, ultimosMeses } from "@/lib/elegancia/datos";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -39,14 +39,12 @@ export default async function FinanzasPage() {
       .limit(5000),
   ]);
 
-  // Ventas en USD (la moneda principal); otras monedas se cuentan aparte.
+  // Todo en dólares (Payphone): lo anotado en otra moneda se convierte.
   const vendidoUsd = new Map(meses.map((m) => [m, 0]));
-  let otrasMonedas = 0;
   for (const v of (ventas ?? []) as Array<{ value_cents: number | null; currency: string | null; closed_at: string | null }>) {
     const m = (v.closed_at ?? "").slice(0, 7);
     if (!vendidoUsd.has(m)) continue;
-    if ((v.currency ?? "USD") === "USD") vendidoUsd.set(m, (vendidoUsd.get(m) ?? 0) + (v.value_cents ?? 0));
-    else otrasMonedas += 1;
+    vendidoUsd.set(m, (vendidoUsd.get(m) ?? 0) + aDolares(v.value_cents, v.currency));
   }
 
   const mesActual = meses[meses.length - 1]!;
@@ -147,9 +145,6 @@ export default async function FinanzasPage() {
             })}
           </tbody>
         </table>
-        {otrasMonedas > 0 && (
-          <p className="mt-3 text-xs text-text-muted">{otrasMonedas} venta(s) en otras monedas no están sumadas en esta tabla.</p>
-        )}
       </Card>
     </div>
   );
