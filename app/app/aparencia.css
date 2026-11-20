@@ -274,3 +274,14 @@ body:has([data-marca-org][data-aparencia="elegancia"]) [data-casca="menu"] nav::
 body:has([data-marca-org][data-aparencia="elegancia"]) [data-casca="menu"] nav a svg {
   flex-shrink: 0;
 }
+/* Elegancia (tema claro): acento NEGRO en botones y estados activos. El gerador
+   de marca rechaza tonos neutros y caía al verde de fábrica; aquí se fija el
+   negro solo para esta plantilla y solo en claro (el oscuro usa su lavanda). */
+html:not([data-theme="dark"]) body:has([data-marca-org][data-aparencia="elegancia"]) {
+  --color-accent-50: #f4f5f3; --color-accent-100: #e8eae6; --color-accent-200: #d1d4cf;
+  --color-accent-300: #aeb2ab; --color-accent-400: #868b83; --color-accent-500: #5d625b;
+  --color-accent-600: #13171a; --color-accent-700: #000000; --color-accent-800: #000000;
+  --color-accent-900: #000000; --color-accent-950: #000000;
+  --color-accent: #13171a; --color-accent-hover: #000000; --color-accent-soft: #e8eae6; --color-accent-fg: #ffffff;
+  --primary: #13171a; --primary-foreground: #ffffff; --accent-foreground: #ffffff; --ring: #5d625b;
+}
