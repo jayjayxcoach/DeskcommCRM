@@ -32,8 +32,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
       { src: "/brand/icon-any-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/brand/icon-any-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       // Con su fondo azul noche: el ícono de la pantalla de inicio del celular.
-      { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
-      { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/brand/icon-192.png?v=2", sizes: "192x192", type: "image/png", purpose: "maskable" },
+      { src: "/brand/icon-512.png?v=2", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

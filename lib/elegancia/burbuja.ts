@@ -31,10 +31,10 @@ export function cssDeLaBurbuja(caja: string, entrada: boolean): string {
 ${caja}{display:grid;place-items:center;position:fixed;inset:0;background:${FONDO_DE_ENTRADA};overflow:hidden}
 ${caja} .eb-brillo{position:absolute;inset:0;margin:auto;width:300px;height:300px;border-radius:50%;
   background:radial-gradient(closest-side,#b9a8ff59,#b9a8ff00);animation:${brilloIni}eb-latido 2.4s ease-in-out infinite}
-${caja} .eb-pop{position:relative;width:120px;${pop ? `animation:${pop.replace(/,$/, "")}` : ""}}
-${caja} .eb-burbuja{display:block;width:120px;height:auto;overflow:visible;animation:eb-flota 1.8s ease-in-out infinite}
+${caja} .eb-pop{position:relative;width:min(170px,42vw);${pop ? `animation:${pop.replace(/,$/, "")}` : ""}}
+${caja} .eb-burbuja{display:block;width:min(170px,42vw);height:auto;overflow:visible;animation:eb-flota 1.8s ease-in-out infinite}
 ${caja} .eb-ojo{transform-box:fill-box;transform-origin:center;animation:eb-parpadeo 3s ease-in-out .5s infinite}
-@keyframes eb-entra{0%{transform:scale(.8) translateY(6px);opacity:.5}100%{transform:none;opacity:1}}
+@keyframes eb-entra{0%{transform:none}35%{transform:scale(1.06,.92)}65%{transform:scale(.97,1.04)}100%{transform:none}}
 @keyframes eb-flota{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-7px) rotate(-3deg)}60%{transform:translateY(0) rotate(2deg)}}
 @keyframes eb-parpadeo{0%,14%,100%{transform:scaleY(1)}7%{transform:scaleY(.12)}}
 @keyframes eb-latido{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
