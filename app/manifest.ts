@@ -1,7 +1,5 @@
 import type { MetadataRoute } from "next";
 
-import { coresDaBarraDoNavegador } from "@/lib/branding/barra-do-navegador";
-import { REGUA_DO_PRODUTO } from "@/lib/branding/regua-do-produto";
 import { marcaDaSaida } from "@/lib/branding/saida";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { idiomaDoVisitante } from "@/lib/i18n/idiomaAnonimo";
@@ -12,9 +10,6 @@ export const dynamic = "force-dynamic";
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const marca = await marcaDaSaida(null);
-  // A entrada clara da mesma régua da barra do navegador: o manifest não aceita
-  // media query, então não há como declarar o tema escuro aqui.
-  const cor = coresDaBarraDoNavegador(REGUA_DO_PRODUTO)[0]?.color;
   // A instalação não tem idioma próprio: o do aparelho que pede (Accept-Language).
   const idioma = await idiomaDoVisitante(null);
   return {
@@ -26,11 +21,18 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     display: "standalone",
     start_url: "/app",
     scope: "/",
-    ...(cor ? { background_color: cor, theme_color: cor } : {}),
+    // Elegancia de Amor: pantalla de arranque oscura, del mismo azul noche del logo,
+    // para que la burbuja quede flotando (sin el cuadrado) y empalme con la
+    // animación de entrada (`app/SplashDeEntrada.tsx`).
+    background_color: "#0f0d24",
+    theme_color: "#0f0d24",
     icons: [
       // Elegancia de Amor: el logo propio vive en `public/brand/`.
-      { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png" },
-      { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png" },
+      // "any" sin fondo: es la que Android pone en la pantalla de arranque.
+      { src: "/brand/icon-any-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/brand/icon-any-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      // Con su fondo azul noche: el ícono de la pantalla de inicio del celular.
+      { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
       { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };

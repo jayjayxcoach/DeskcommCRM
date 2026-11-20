@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SPLASH_INIT_SCRIPT, SplashDeEntrada } from "./SplashDeEntrada";
 import localFont from "next/font/local";
 import { headers } from "next/headers";
 import { Toaster } from "sonner";
@@ -355,6 +356,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             genérica self-host). */}
         <MarcaNoNavegador />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_INIT_SCRIPT }} />
       </head>
       {/*
         `min-h-dvh` e não `min-h-screen`: `100vh` é a janela com a barra de
@@ -366,6 +368,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         `docs/design-system/screen-flow/07-responsive-strategy.md`.
       */}
       <body className="min-h-dvh bg-bg font-sans text-text antialiased">
+        <SplashDeEntrada />
         <Providers>
           <MarcaDosClientComponents>
             <ThemeProvider>{children}</ThemeProvider>
