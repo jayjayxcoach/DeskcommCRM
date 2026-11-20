@@ -11,6 +11,7 @@ import { formatSomaPorMoeda, formatValorDoNegocio, MOEDA_PADRAO, somaPorMoeda } 
 import type { GestoDeSelecao } from "./KanbanCard";
 import { CardsDaColuna } from "./CardsDaColuna";
 import { bordaDaColuna, fundoDaColuna } from "@/lib/kanban/cor-da-coluna";
+import { PencilSimple } from "@/lib/ui/icons";
 
 interface StageColumnProps {
   stage: Stage;
@@ -137,7 +138,36 @@ export function StageColumn({
           moedaDoLead,
         );
 
-  const idsVisiveis = useMemo(() => leads.map((l) => l.id), [leads]);
+  // Elegancia: tocar el nombre de la columna la ordena por lo MÁS RECIENTE
+  // (quien escribió último arriba). La elección queda guardada en este aparato.
+  const claveDeOrden = `eleg-orden:${stage.id}`;
+  const [porReciente, setPorReciente] = useState(false);
+  useEffect(() => {
+    try {
+      setPorReciente(localStorage.getItem(claveDeOrden) === "reciente");
+    } catch {
+      /* sin almacenamiento */
+    }
+  }, [claveDeOrden]);
+  const alternarOrden = () =>
+    setPorReciente((v) => {
+      const nuevo = !v;
+      try {
+        if (nuevo) localStorage.setItem(claveDeOrden, "reciente");
+        else localStorage.removeItem(claveDeOrden);
+      } catch {
+        /* sin almacenamiento */
+      }
+      return nuevo;
+    });
+  const ordenados = useMemo(() => {
+    if (!porReciente) return leads;
+    const fecha = (l: Lead) =>
+      Date.parse(l.conversa?.last_message_at ?? l.last_activity_at ?? l.updated_at ?? l.created_at) || 0;
+    return [...leads].sort((a, b) => fecha(b) - fecha(a));
+  }, [leads, porReciente]);
+
+  const idsVisiveis = useMemo(() => ordenados.map((l) => l.id), [ordenados]);
   const selecionadosAqui = idsVisiveis.filter((id) => selectedLeadIds?.has(id)).length;
   const todosSelecionados = idsVisiveis.length > 0 && selecionadosAqui === idsVisiveis.length;
 
@@ -146,11 +176,11 @@ export function StageColumn({
   // O ajuste do limite é no render, sem um quadro intermediário sem o card.
   const [limite, setLimite] = useState(CARDS_POR_VEZ);
   const limitada = colunaLimitada(stage);
-  const necessario = limiteQueMostra(leads, { limitada, limite, fixos: [soltoId, abertoId] });
+  const necessario = limiteQueMostra(ordenados, { limitada, limite, fixos: [soltoId, abertoId] });
   if (necessario > limite) setLimite(necessario);
   const mostrados = useMemo(
-    () => cardsVisiveisDaColuna(leads, { limitada, limite: necessario }),
-    [leads, limitada, necessario],
+    () => cardsVisiveisDaColuna(ordenados, { limitada, limite: necessario }),
+    [ordenados, limitada, necessario],
   );
   const escondidos = leads.length - mostrados.length;
 
@@ -270,19 +300,16 @@ export function StageColumn({
               style={accentStyle}
               aria-hidden
             />
-            {podeRenomear && onRenomear ? (
-              // `key` pelo nome: remonta (e descarta o rascunho) quando o nome
-              // GRAVADO muda — mesmo contrato de `NomeDaEtapa` em Configurações,
-              // para uma edição feita em outra aba não ficar escondida atrás de
-              // um rascunho velho aqui.
-              // Dentro do <h2>: a coluna segue sendo título para quem navega
-              // por leitor de tela, com ou sem permissão de renomear.
-              <h2 className="flex min-w-0 flex-1">
-                <NomeDaEtapaNoQuadro key={stage.name} nome={stage.name} onConfirmar={onRenomear} />
-              </h2>
-            ) : (
-              <h2 className="flex-1 truncate text-sm font-semibold text-text">{stage.name}</h2>
-            )}
+            {/* Elegancia: tocar el nombre ordena por lo más reciente; mantenerlo
+                presionado (o el lápiz) lo renombra. */}
+            <h2 className="flex min-w-0 flex-1 items-center gap-1">
+              <NombreDeLaEtapa
+                nome={stage.name}
+                onRenomear={podeRenomear && !somenteLeitura ? onRenomear : undefined}
+                porReciente={porReciente}
+                onOrdenar={alternarOrden}
+              />
+            </h2>
             <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-medium text-text-muted tabular-nums">
               {selecionadosAqui > 0 ? `${selecionadosAqui}/${leads.length}` : leads.length}
             </span>
@@ -374,12 +401,112 @@ export function StageColumn({
  * GRAVADO muda, então uma edição feita em outra aba não fica escondida atrás
  * de um rascunho velho.
  */
+function NombreDeLaEtapa({
+  nome,
+  onRenomear,
+  porReciente,
+  onOrdenar,
+}: {
+  nome: string;
+  onRenomear?: (nome: string) => void;
+  porReciente: boolean;
+  onOrdenar: () => void;
+}) {
+  const [editando, setEditando] = useState(false);
+  const largo = useRef<{ t: ReturnType<typeof setTimeout> | null; x: number; y: number; disparo: boolean }>({
+    t: null,
+    x: 0,
+    y: 0,
+    disparo: false,
+  });
+  const soltar = () => {
+    if (largo.current.t) clearTimeout(largo.current.t);
+    largo.current.t = null;
+  };
+
+  if (editando && onRenomear) {
+    return (
+      <NomeDaEtapaNoQuadro
+        key={nome}
+        nome={nome}
+        onConfirmar={onRenomear}
+        autoFocus
+        onTerminar={() => setEditando(false)}
+      />
+    );
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        title={porReciente ? "Ordenado por lo más reciente · toca para el orden normal" : "Toca para ordenar por lo más reciente"}
+        className="flex min-w-0 flex-1 items-center gap-1.5 truncate rounded-sm px-1 py-0.5 text-left text-sm font-semibold text-text select-none hover:bg-surface"
+        onPointerDown={(e) => {
+          if (!onRenomear || e.button !== 0) return;
+          largo.current.x = e.clientX;
+          largo.current.y = e.clientY;
+          largo.current.disparo = false;
+          soltar();
+          largo.current.t = setTimeout(() => {
+            largo.current.t = null;
+            largo.current.disparo = true;
+            try {
+              navigator.vibrate?.(20);
+            } catch {
+              /* sin vibración */
+            }
+            setEditando(true);
+          }, 500);
+        }}
+        onPointerMove={(e) => {
+          if (largo.current.t && Math.hypot(e.clientX - largo.current.x, e.clientY - largo.current.y) > 10) soltar();
+        }}
+        onPointerUp={soltar}
+        onPointerCancel={soltar}
+        onContextMenu={(e) => {
+          if (onRenomear) e.preventDefault();
+        }}
+        onClick={() => {
+          if (largo.current.disparo) {
+            largo.current.disparo = false;
+            return;
+          }
+          onOrdenar();
+        }}
+      >
+        <span className="truncate">{nome}</span>
+        {porReciente && (
+          <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-px text-[10px] font-semibold text-text-muted">
+            ↓ recientes
+          </span>
+        )}
+      </button>
+      {onRenomear && (
+        <button
+          type="button"
+          aria-label={`Editar el nombre «${nome}»`}
+          title="Editar nombre"
+          onClick={() => setEditando(true)}
+          className="grid h-6 w-6 shrink-0 place-items-center rounded-sm text-text-muted opacity-60 hover:bg-surface hover:opacity-100"
+        >
+          <PencilSimple size={13} weight="regular" aria-hidden />
+        </button>
+      )}
+    </>
+  );
+}
+
 function NomeDaEtapaNoQuadro({
   nome,
   onConfirmar,
+  autoFocus = false,
+  onTerminar,
 }: {
   nome: string;
   onConfirmar: (nome: string) => void;
+  autoFocus?: boolean;
+  onTerminar?: () => void;
 }) {
   const t = useT();
   const [rascunho, setRascunho] = useState(nome);
@@ -393,15 +520,19 @@ function NomeDaEtapaNoQuadro({
     if (cancelado.current || !limpo || limpo === nome) {
       cancelado.current = false;
       setRascunho(nome);
+      onTerminar?.();
       return;
     }
     onConfirmar(limpo);
+    onTerminar?.();
   }
 
   return (
     <input
       value={rascunho}
       maxLength={80}
+      autoFocus={autoFocus}
+      onFocus={autoFocus ? (e) => e.currentTarget.select() : undefined}
       aria-label={`${t("Nome da etapa")} «${nome}»`}
       data-testid="nome-etapa-quadro"
       onChange={(e) => setRascunho(e.target.value)}
