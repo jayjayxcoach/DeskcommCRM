@@ -49,6 +49,7 @@ interface KanbanCardActionsProps {
 
 export function KanbanCardActions({ lead, pipelineId, etapas, onMoverPara }: KanbanCardActionsProps) {
   const t = useT();
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const [loseOpen, setLoseOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -114,7 +115,7 @@ export function KanbanCardActions({ lead, pipelineId, etapas, onMoverPara }: Kan
       positivo de que clicar no CARD continua abrindo o dossiê.
     */
     <span className="contents" onClick={(e) => e.stopPropagation()}>
-      <DropdownMenu>
+      <DropdownMenu open={menuAbierto} onOpenChange={setMenuAbierto}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
@@ -126,7 +127,15 @@ export function KanbanCardActions({ lead, pipelineId, etapas, onMoverPara }: Kan
             // sem o card crescer: o respiro do card (10px em cima, 12px à
             // direita) é maior que a expansão, então o `overflow-hidden` não a corta.
             className="relative h-7 w-7 shrink-0 max-lg:before:absolute max-lg:before:-inset-2 max-lg:before:content-[''] opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
-            onClick={(e) => e.stopPropagation()}
+            // En el celular el menú abre SOLO con un toque (click), nunca al
+            // apoyar el dedo para deslizar: el pointerdown táctil no lo abre.
+            onPointerDown={(e) => {
+              if (e.pointerType !== "mouse") e.preventDefault();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (e.detail !== 0 && (e.nativeEvent as PointerEvent).pointerType !== "mouse") setMenuAbierto((v) => !v);
+            }}
             aria-label={t("Ações do negócio")}
           >
             <DotsThree size={16} weight="bold" />

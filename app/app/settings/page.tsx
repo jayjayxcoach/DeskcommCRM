@@ -10,7 +10,7 @@ import { aparenciaDeSettings } from "@/lib/aparencia/ajustes";
 import { hubSections, type NavGroupId } from "@/lib/navigation/registry";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Configurações" };
+export const metadata: Metadata = { title: "Configuración" };
 
 /* Plantilla Elegancia: todas las áreas del CRM viven aquí, en pestañas, con
    cuadritos compactos (ícono + nombre) para que cada área entre en una pantalla. */

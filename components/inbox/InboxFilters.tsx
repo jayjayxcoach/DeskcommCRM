@@ -219,6 +219,8 @@ export function InboxFilters({ value, onChange, filas: filasDaOrganizacao, abasI
   const t = useT();
   const [abasDaPessoa, setAbasDaPessoa] = useState<AbaDaPessoa[]>(() => abasIniciais ?? abasPadrao());
   const [organizandoAbas, setOrganizandoAbas] = useState(false);
+  // Elegancia (celular): buscador y filtros plegados detrás de un botón.
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const [searchInput, setSearchInput] = useState(value.search);
   const tabsListRef = useRef<HTMLDivElement>(null);
   const [moreTabs, setMoreTabs] = useState({ left: false, right: false });
@@ -580,7 +582,16 @@ export function InboxFilters({ value, onChange, filas: filasDaOrganizacao, abasI
 
   return (
     <div className="border-b border-border bg-background">
-      <div className="space-y-2 px-3 pt-3 pb-2">
+      <button
+        type="button"
+        className="eleg-inbox-filtros-boton"
+        aria-expanded={filtrosAbiertos}
+        onClick={() => setFiltrosAbiertos((v) => !v)}
+      >
+        <MagnifyingGlass size={15} weight="regular" aria-hidden />
+        {filtrosAbiertos ? "Ocultar filtros" : "Buscar y filtrar"}
+      </button>
+      <div className="eleg-inbox-filtros space-y-2 px-3 pt-3 pb-2" data-abierto={filtrosAbiertos ? "" : undefined}>
         <div className="flex items-center gap-2">
           <div className="relative min-w-0 flex-1">
             <MagnifyingGlass

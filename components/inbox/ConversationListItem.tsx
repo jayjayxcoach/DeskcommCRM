@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 
 import type { Locale } from "date-fns";
@@ -103,6 +104,8 @@ interface Props {
    * sozinha: o selo só aparece com `true` porque afirmar o contrário seria pior.
    */
   mencionado?: boolean;
+  /** Ya hay alguna conversación marcada: tocar una fila la suma a la selección. */
+  haySeleccion?: boolean;
 }
 
 /**
@@ -171,7 +174,13 @@ export function ConversationListItem({
   onAlternarSelecao,
   onAlternarExemplo,
   mencionado = false,
+  haySeleccion = false,
 }: Props) {
+  const largo = useRef<{ t: ReturnType<typeof setTimeout> | null; inicio: { x: number; y: number }; disparo: boolean }>({
+    t: null,
+    inicio: { x: 0, y: 0 },
+    disparo: false,
+  });
   const localeDaData = useLocaleDeData();
   const t = useT();
   const c = conversation.contacts ?? null;
@@ -304,7 +313,7 @@ export function ConversationListItem({
           data-testid={`selecao-em-lote-${conversation.id}`}
           onClick={() => onAlternarSelecao(conversation.id)}
           className={cn(
-            "mt-3 ml-2 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border transition-colors",
+            "eleg-sel-caja mt-3 ml-2 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border transition-colors",
             "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent",
             selecionado
               ? "border-accent bg-accent text-accent-foreground"
@@ -317,7 +326,54 @@ export function ConversationListItem({
       <button
         type="button"
         data-conversation-id={conversation.id}
-        onClick={() => onSelect(conversation.id)}
+        // Toque largo (o clic largo) = empezar a seleccionar esta conversación.
+        onPointerDown={(e) => {
+          const alternar = onAlternarSelecao;
+          if (!alternar || e.button !== 0) return;
+          largo.current.inicio = { x: e.clientX, y: e.clientY };
+          largo.current.disparo = false;
+          if (largo.current.t) clearTimeout(largo.current.t);
+          largo.current.t = setTimeout(() => {
+            largo.current.disparo = true;
+            largo.current.t = null;
+            try {
+              navigator.vibrate?.(20);
+            } catch {
+              /* sin vibración */
+            }
+            alternar(conversation.id);
+          }, 500);
+        }}
+        onPointerMove={(e) => {
+          const l = largo.current;
+          if (l.t && Math.hypot(e.clientX - l.inicio.x, e.clientY - l.inicio.y) > 10) {
+            clearTimeout(l.t);
+            l.t = null;
+          }
+        }}
+        onPointerUp={() => {
+          if (largo.current.t) clearTimeout(largo.current.t);
+          largo.current.t = null;
+        }}
+        onPointerCancel={() => {
+          if (largo.current.t) clearTimeout(largo.current.t);
+          largo.current.t = null;
+        }}
+        onContextMenu={(e) => {
+          if (onAlternarSelecao) e.preventDefault();
+        }}
+        onClick={() => {
+          if (largo.current.disparo) {
+            largo.current.disparo = false;
+            return;
+          }
+          // Con alguna seleccionada, tocar otra la suma a la selección.
+          if (onAlternarSelecao && haySeleccion) {
+            onAlternarSelecao(conversation.id);
+            return;
+          }
+          onSelect(conversation.id);
+        }}
         className={cn(
           "group relative flex min-w-0 flex-1 items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-elevated",
           "focus-visible:outline-hidden focus-visible:bg-surface-elevated",

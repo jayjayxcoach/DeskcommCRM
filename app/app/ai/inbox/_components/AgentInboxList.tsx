@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
+import { avisoEnEspanol } from "@/lib/elegancia/avisos-en-espanol";
 import { useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -197,11 +198,11 @@ function InboxRow({
             cadastrou por outra que ela não sabe procurar.
             O que continua traduzido é o que é NOSSO: severidade, rótulo do kind,
             orientação e rótulo do destino. */}
-        <p className="text-sm font-medium">{item.title}</p>
+        <p className="text-sm font-medium">{avisoEnEspanol(item.title)}</p>
         <p className="text-xs text-muted-foreground">
           {kindLabel(item.kind, t)} · {when}
         </p>
-        {item.body ? <p className="mt-1 text-xs text-muted-foreground">{item.body}</p> : null}
+        {item.body ? <p className="mt-1 text-xs text-muted-foreground">{avisoEnEspanol(item.body)}</p> : null}
         {item.destination.orientacao ? <p className="mt-2 text-xs text-muted-foreground">{t(item.destination.orientacao)}</p> : null}
         {item.destination.estado === "disponivel" ? (
           <Button asChild size="sm" variant="link" className="mt-1 h-auto whitespace-normal px-0 text-left max-md:min-h-11">

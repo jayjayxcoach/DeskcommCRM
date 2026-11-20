@@ -298,3 +298,54 @@
   .eleg-config-ico { width: 32px; height: 32px; }
   .eleg-config-nombre { font-size: 12.5px; }
 }
+
+/* ── BANDEJA: limpia (filtros plegados, selección con toque largo, botón con color) ── */
+.eleg-inbox-filtros-boton { display: none; }
+body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-iniciar {
+  background: var(--color-accent, #13171a); color: var(--color-accent-foreground, #fff);
+  border-color: transparent; font-weight: 600; border-radius: 999px;
+  box-shadow: 0 8px 20px -10px #13171a99;
+}
+body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-iniciar:hover { filter: brightness(1.12); }
+[data-theme="dark"] body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-iniciar,
+body:has([data-marca-org][data-aparencia="elegancia"])[data-theme="dark"] .eleg-iniciar { box-shadow: 0 8px 22px -10px #000; }
+/* Casillas solo cuando ya se empezó a seleccionar (toque largo sobre una conversación). */
+body:has([data-marca-org][data-aparencia="elegancia"]):not(:has(.eleg-sel-caja[aria-checked="true"])) .eleg-sel-caja,
+body:has([data-marca-org][data-aparencia="elegancia"]):not(:has(.eleg-sel-caja[aria-checked="true"])) .eleg-sel-todas { display: none !important; }
+@media (max-width: 767px) {
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-inbox-filtros-boton {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    width: calc(100% - 24px); margin: 10px 12px 2px; height: 34px; border-radius: 999px;
+    font-size: 13px; font-weight: 600; color: var(--eleg-text, inherit);
+    background: var(--eleg-well, transparent); border: 1px solid var(--eleg-rim, var(--color-border));
+  }
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-inbox-filtros:not([data-abierto]) { display: none !important; }
+  /* Iniciar conversación: botón redondo flotante, dentro de la Bandeja. */
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-iniciar-caja { padding: 0; height: 0; }
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-iniciar {
+    position: fixed; right: 16px; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); z-index: 41;
+    width: 56px; height: 56px; padding: 0; border-radius: 999px;
+    box-shadow: 0 12px 28px -8px #13171ab3;
+  }
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-iniciar svg { width: 24px; height: 24px; }
+  body:has([data-marca-org][data-aparencia="elegancia"]) .eleg-iniciar-texto { display: none; }
+}
+
+/* ── MÁS › Buscar: encontrar a una clienta y abrir su chat ── */
+.eleg-buscar { display: flex; flex-direction: column; gap: 10px; min-height: 46vh; }
+.eleg-buscar-campo {
+  display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 14px; border-radius: 999px;
+  background: var(--eleg-glass); border: 1px solid var(--eleg-rim); color: var(--eleg-text);
+}
+.eleg-buscar-campo .eleg-i { width: 19px; height: 19px; opacity: .6; flex: none; }
+.eleg-buscar-campo input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; font-size: 16px; color: inherit; }
+.eleg-buscar-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 52vh; overflow-y: auto; }
+.eleg-buscar-lista button {
+  width: 100%; display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 16px; text-align: left;
+  background: var(--eleg-glass); border: 1px solid var(--eleg-rim); color: var(--eleg-text);
+}
+.eleg-buscar-ini { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 700; font-size: 14px; background: var(--eleg-well); }
+.eleg-buscar-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.eleg-buscar-txt b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eleg-buscar-txt small { font-size: 12px; opacity: .6; }
+.eleg-buscar-vacio { text-align: center; font-size: 13px; opacity: .6; padding: 10px; }

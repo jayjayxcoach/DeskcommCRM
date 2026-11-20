@@ -296,7 +296,7 @@ export function ConversationList({
             está na tela. Some com a lista vazia — oferecer "selecionar todas"
             quando não há nenhuma é botão de mentira. */}
         {onAlternarSelecao && items.length > 0 && (
-          <div className="flex items-center gap-2 border-b border-border/70 px-3 py-1.5">
+          <div className="eleg-sel-todas flex items-center gap-2 border-b border-border/70 px-3 py-1.5">
             <button
               type="button"
               role="checkbox"
@@ -332,6 +332,7 @@ export function ConversationList({
             automaticoDaOrg={automaticoDaOrg.data}
             selecionado={selecionados?.has(c.id)}
             onAlternarSelecao={onAlternarSelecao}
+            haySeleccion={(selecionados?.size ?? 0) > 0}
             onAlternarExemplo={podeMarcarExemplo ? alternarExemplo : undefined}
           />
         ))}

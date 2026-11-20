@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
+import { useSensorToqueLargo } from "@/hooks/kanban/useSensorToqueLargo";
+import { useRecordarScrollDelQuadro } from "@/hooks/kanban/useRecordarScrollDelQuadro";
 import { useQueryClient } from "@tanstack/react-query";
 import { useT } from "@/hooks/i18n/useT";
 import { Card } from "@/components/ui/card";
@@ -106,6 +108,8 @@ function BoardSkeleton() {
   );
 }
 
+const SENSORES_TACTILES = [useSensorToqueLargo];
+
 export function KanbanBoard({
   pipelineId,
   stages: stagesProp,
@@ -121,6 +125,9 @@ export function KanbanBoard({
   corNaColuna = false,
   somenteLeitura = false,
 }: KanbanBoardProps) {
+  const [tactil] = useState(
+    () => typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches === true,
+  );
   const t = useT();
   const useExternal = stagesProp !== undefined && leadsProp !== undefined;
   const queryResult = useBoard(useExternal ? null : pipelineId);
@@ -206,6 +213,8 @@ export function KanbanBoard({
   // Os callbacks que atravessam até os cards leem `data` e a seleção por ref
   // (#4788): com eles nas dependências, cada move, evento de realtime ou clique
   // de seleção trocava a função de todos os cards e redesenhava o quadro.
+  const quadroRef = useRef<HTMLDivElement | null>(null);
+  useRecordarScrollDelQuadro(`quadro-scroll:${pipelineId}`, quadroRef, (data?.leads.length ?? 0) > 0);
   const dataAtual = useRef(data);
   const selecaoAtual = useRef(selectedLeadIds);
   useEffect(() => {
@@ -402,7 +411,13 @@ export function KanbanBoard({
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <DragDropContext
+      onDragEnd={handleDragEnd}
+      // Táctil: la tarjeta solo se mueve con toque largo (ver useSensorToqueLargo).
+      // Se decide UNA vez al montar: la lista de sensores no puede cambiar después.
+      enableDefaultSensors={!tactil}
+      sensors={tactil ? SENSORES_TACTILES : undefined}
+    >
       {/* UM contêiner de rolagem só, nos dois eixos. Rolar cada coluna por
           conta própria seria o desenho "Trello", mas o @hello-pangea/dnd não
           suporta Droppable rolável dentro de outro contêiner rolável ("nested
@@ -419,6 +434,7 @@ export function KanbanBoard({
           "o quadro cabe na tela"). O respiro até os filtros vem do `gap-4` da
           página. */}
       <div
+        ref={quadroRef}
         className="flex min-h-0 flex-1 items-start gap-3 overflow-auto px-4 pb-4"
         data-quadro-do-funil
       >

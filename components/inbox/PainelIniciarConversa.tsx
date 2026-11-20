@@ -384,15 +384,16 @@ export function BotaoIniciarConversa() {
 
   return (
     <>
-      <div className="px-3 pt-3">
+      <div className="eleg-iniciar-caja px-3 pt-3">
         <Button
           type="button"
           variant="outline"
-          className="w-full justify-center gap-2"
+          className="eleg-iniciar w-full justify-center gap-2"
+          aria-label={t("Iniciar conversa")}
           onClick={() => setAberto(true)}
         >
           <ChatCircle size={16} weight="regular" aria-hidden />
-          {t("Iniciar conversa")}
+          <span className="eleg-iniciar-texto">{t("Iniciar conversa")}</span>
         </Button>
       </div>
       <IniciarConversaDialog open={aberto} onOpenChange={setAberto} />
