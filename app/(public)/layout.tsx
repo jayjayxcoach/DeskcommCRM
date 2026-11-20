@@ -116,7 +116,13 @@ export default async function PublicLayout({ children }: { children: React.React
             <div className="flex justify-center">
               <LogotipoDoProduto nome={marca.nome} className="h-12 w-auto" />
             </div>
-          ) : null}
+          ) : (
+            // Elegancia de Amor: el logo propio (public/brand/).
+            <div className="flex justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/logo-icon.svg" alt={marca.nome} className="h-16 w-auto" />
+            </div>
+          )}
           {children}
         </div>
       </div>

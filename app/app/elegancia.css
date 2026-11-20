@@ -111,6 +111,9 @@
 .eleg-marca-nombre { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .eleg-logo { width: 42px; height: 42px; border-radius: 13px; background: var(--eleg-logo); color: var(--eleg-on-logo); display: grid; place-items: center; flex: none; }
 .eleg-logo .eleg-i { width: 19px; height: 19px; }
+/* Logo propio de Elegancia de Amor: mismo tamaño, sin el cuadrado de fondo. */
+.eleg-logo:has(.eleg-logo-img) { background: none; }
+.eleg-logo-img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .eleg-tabs { display: flex; gap: 2px; padding: 4px; border-radius: 999px; overflow-x: auto; scrollbar-width: none; }
 .eleg-tabs::-webkit-scrollbar { display: none; }
 .eleg-tabs a { position: relative; z-index: 1; padding: 10px 17px; border-radius: 999px; font-size: 13.5px; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 6px; color: var(--eleg-text); }

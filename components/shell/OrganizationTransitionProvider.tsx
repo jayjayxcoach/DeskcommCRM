@@ -58,7 +58,9 @@ export function OrganizationTransitionProvider({ children }: { children: ReactNo
   return <Context.Provider value={controls}>
     {children}
     {pending !== null && createPortal(<div role="status" aria-live="polite" data-testid="organization-transition"
-      className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-background text-foreground">
+      className="fixed inset-0 z-[2147483647] flex flex-col items-center justify-center gap-4 bg-background text-foreground">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/logo-icon.svg" alt="" className="h-14 w-auto" />
       {pending}
     </div>, document.body)}
   </Context.Provider>;

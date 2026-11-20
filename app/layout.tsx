@@ -5,7 +5,6 @@ import { Toaster } from "sonner";
 import { coresDaBarraDoNavegador } from "@/lib/branding/barra-do-navegador";
 import { MarcaDaInstalacaoProvider } from "@/lib/branding/contexto";
 import { cssDaMarca } from "@/lib/branding/css";
-import { iconeDaAba, sufixoDoIcone } from "@/lib/branding/icone";
 import { folhaPersonalizadaDaInstalacao } from "@/lib/branding/folha-personalizada";
 import { CABECALHO_SEM_CSS } from "@/lib/branding/sem-css-personalizado";
 import {
@@ -96,7 +95,7 @@ async function marcaResolvida(): Promise<{
  * motivo medido.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const { linha, marca } = await marcaResolvida();
+  const { marca } = await marcaResolvida();
   const { name } = marca;
   return {
     title: {
@@ -122,9 +121,11 @@ export async function generateMetadata(): Promise<Metadata> {
     // (o PNG de 180, com margem para o canto que ele arredonda) e
     // `apple-mobile-web-app-title` — sem este, a tela de início ganharia o
     // título longo acima.
+    // Elegancia de Amor: el logo propio vive en `public/brand/`.
     icons: {
-      icon: iconeDaAba(linha?.favicon_path),
-      apple: `/app-icon/180${sufixoDoIcone(linha?.favicon_path)}`,
+      icon: [{ url: "/brand/favicon.ico", sizes: "any" }],
+      shortcut: "/brand/favicon.ico",
+      apple: "/brand/apple-touch-icon.png",
     },
     appleWebApp: { capable: true, title: name, statusBarStyle: "default" },
   };

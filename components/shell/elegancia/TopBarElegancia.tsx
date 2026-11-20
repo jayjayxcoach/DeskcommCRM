@@ -43,7 +43,8 @@ function Marca() {
   const contenido = (
     <>
       <i className="eleg-logo">
-        <Icono nombre="heart" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/logo-mark.svg" alt="" className="eleg-logo-img" />
       </i>
       <span className="eleg-marca-nombre">{nombre}</span>
     </>
