@@ -253,6 +253,15 @@ export const NAV_CATALOG = [
     minRole: "manager",
     sidebar: true,
   },
+  {
+    href: "/app/novedades",
+    label: "Novedades",
+    description: "Historial de todo lo que se mejora en el CRM: funciones nuevas, mejoras, arreglos y diseño.",
+    icon: "Lightbulb",
+    group: "crm",
+    section: "O dia a dia da venda",
+    sidebar: true,
+  },
   // ---- CRM — o funil ----
   {
     // ⚠️ ERA "Kanban", e a URL continua sendo. O nome saiu da interface porque o

@@ -19,6 +19,7 @@ export const MENU: Destino[] = [
 ];
 
 export const ABAJO: Destino[] = [
+  { clave: "novedades", href: "/app/novedades", icono: "spark", nombre: "Novedades", activa: ["/app/novedades"] },
   { clave: "conexiones", href: "/app/connections", icono: "plug", nombre: "Conexiones", activa: ["/app/connections"] },
   { clave: "configuracion", href: "/app/settings", icono: "gear", nombre: "Configuración", activa: ["/app/settings"] },
 ];
