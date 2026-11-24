@@ -12,6 +12,13 @@
  *
  * Si el dedo se queda quieto el tiempo del toque largo, es un arrastre de
  * tarjeta (`useSensorToqueLargo`), y ahí no se bloquea nada.
+ *
+ * EN IPHONE/IPAD NO SE BLOQUEA NADA. En Safari de iOS (y todo navegador de
+ * iOS, que usa el mismo motor) cambiar `overflow-x` a `hidden` mientras el dedo
+ * baja devuelve el quadro a la PRIMERA columna (scrollLeft = 0) y corta el
+ * gesto: se pasaba a "Enviado", se bajaba, y saltaba a "Prospecto". Allí se
+ * deja el desplazamiento nativo de Apple. Y por seguridad, en los demás, si al
+ * bloquear la posición cambia, se devuelve a donde estaba.
  */
 import { useEffect, type RefObject } from "react";
 
@@ -20,11 +27,20 @@ const UMBRAL_PX = 8;
 const ES_ARRASTRE_MS = 400;
 const FIN_SIN_SCROLLEND_MS = 180;
 
+function esIOS(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    // iPad con iPadOS se presenta como Mac de escritorio.
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
+
 /** `listo`: el quadro ya está en pantalla (mientras carga se ve otro bloque). */
 export function useDesplazamientoRecto(ref: RefObject<HTMLElement | null>, listo: boolean): void {
   useEffect(() => {
     const quadro = ref.current;
-    if (!quadro) return;
+    if (!quadro || esIOS()) return;
 
     let inicio: { x: number; y: number; t: number } | null = null;
     let bloqueado = false;
@@ -63,8 +79,13 @@ export function useDesplazamientoRecto(ref: RefObject<HTMLElement | null>, listo
       inicio = null;
       if (esArrastre) return;
       bloqueado = true;
+      const x = quadro.scrollLeft;
+      const y = quadro.scrollTop;
       if (dx > dy) quadro.style.overflowY = "hidden";
       else quadro.style.overflowX = "hidden";
+      // Si el navegador movió el quadro al cambiar `overflow`, se devuelve.
+      if (quadro.scrollLeft !== x) quadro.scrollLeft = x;
+      if (quadro.scrollTop !== y) quadro.scrollTop = y;
     };
 
     // Al soltar el dedo sigue la inercia: se libera cuando el scroll termina.
