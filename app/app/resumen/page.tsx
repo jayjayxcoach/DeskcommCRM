@@ -5,13 +5,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { GraficoGasto } from "@/components/elegancia/GraficoGasto";
-import {
-  ANCHOS,
-  COOKIE_RESUMEN,
-  ResumenOrdenable,
-  type BloqueResumen,
-  type DisposicionResumen,
-} from "@/components/elegancia/ResumenOrdenable";
+import { ResumenOrdenable, type BloqueResumen } from "@/components/elegancia/ResumenOrdenable";
 import { Card } from "@/components/ui/card";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
@@ -25,6 +19,7 @@ import {
   sumaPorMoneda,
   ultimosMeses,
 } from "@/lib/elegancia/datos";
+import { COOKIE_RESUMEN, leerDisposicion } from "@/lib/elegancia/resumen-orden";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -492,30 +487,6 @@ export default async function ResumenPage() {
       }
     />
   );
-}
-
-/** Lee la cookie del Resumen; si falta o viene rota, queda el orden de fábrica. */
-function leerDisposicion(crudo: string | undefined, ids: string[]): DisposicionResumen {
-  const base: DisposicionResumen = { o: ids, a: {}, x: [] };
-  if (!crudo) return base;
-  try {
-    const v = JSON.parse(decodeURIComponent(crudo)) as Partial<DisposicionResumen>;
-    const conocidos = new Set(ids);
-    const o = Array.isArray(v.o)
-      ? v.o.filter((x): x is string => typeof x === "string" && conocidos.has(x))
-      : [];
-    const a: Record<string, number> = {};
-    for (const [k, n] of Object.entries(v.a ?? {})) {
-      if (conocidos.has(k) && (ANCHOS as readonly number[]).includes(n)) a[k] = n;
-    }
-    const x = Array.isArray(v.x)
-      ? v.x.filter((id): id is string => typeof id === "string" && conocidos.has(id))
-      : [];
-    // Cuadros nuevos (o el de dinero si antes no se veía) van al final.
-    return { o: [...new Set([...o, ...ids])], a, x };
-  } catch {
-    return base;
-  }
 }
 
 /* ── Dona del prototipo: pedidos abiertos por tipo de evento ── */

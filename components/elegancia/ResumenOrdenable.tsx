@@ -9,14 +9,7 @@
  */
 import { useEffect, useState, type ReactNode } from "react";
 
-export interface DisposicionResumen {
-  /** ids en el orden elegido */
-  o: string[];
-  /** ancho elegido por id (columnas de 12) */
-  a: Record<string, number>;
-  /** ids ocultos */
-  x: string[];
-}
+import { ANCHOS, COOKIE_RESUMEN, type DisposicionResumen } from "@/lib/elegancia/resumen-orden";
 
 export interface BloqueResumen {
   id: string;
@@ -24,9 +17,6 @@ export interface BloqueResumen {
   anchoPorDefecto: number;
   nodo: ReactNode;
 }
-
-export const COOKIE_RESUMEN = "eleg-resumen";
-export const ANCHOS = [4, 5, 6, 7, 8, 12] as const;
 
 /* Clases literales para que Tailwind las genere. */
 const CLASE_ANCHO: Record<number, string> = {
