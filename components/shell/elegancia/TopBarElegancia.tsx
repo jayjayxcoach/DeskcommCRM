@@ -39,7 +39,7 @@ function Marca() {
   const active = useActiveOrg();
   const transition = useOrganizationTransition();
   const [, setPending] = useState(false);
-  const nombre = active?.marca?.nome || "Elegancia de Amor";
+  const nombre = active?.marca?.nome || "CRM";
   const contenido = (
     <>
       <i className="eleg-logo">
