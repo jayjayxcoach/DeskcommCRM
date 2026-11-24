@@ -46,6 +46,7 @@ import { hrefDaPaginaDoNegocio } from "@/lib/leads/pagina-do-negocio";
 import { ROLE_RANK, type Role } from "@/lib/auth/types";
 import { cn } from "@/lib/utils";
 import { BotonesDeEvento } from "@/components/kanban/BotonesDeEvento";
+import { SelectorDeEtapas, useEtapasVisibles } from "@/components/kanban/SelectorDeEtapas";
 
 /**
  * AS TRÊS VISÕES DO FUNIL (#2770, #3172).
@@ -247,6 +248,10 @@ export function PipelinePageClient({
   }, [data?.pipeline.settings]);
   // `useMemo` (#4788): um array novo a cada render (tecla da busca, clique de
   // seleção) chegava ao quadro como `leads` novo e redesenhava todos os cards.
+  const { visibles: etapasVisibles, guardar: guardarEtapasVisibles } = useEtapasVisibles(
+    pipelineId,
+    data?.stages,
+  );
   const filteredLeads = useMemo(
     () => (data ? applyFilters(data.leads, filters, { categoriaDo }) : []),
     [data, filters, categoriaDo],
@@ -515,7 +520,16 @@ export function PipelinePageClient({
           settings={data?.pipeline.settings ?? funilInicial.settings}
         />
       )}
-      <BotonesDeEvento filters={filters} onChange={setFilters} leads={data?.leads ?? []} />
+      <BotonesDeEvento filters={filters} onChange={setFilters} leads={data?.leads ?? []}>
+        {visaoEfetiva === "quadro" && data && (
+          <SelectorDeEtapas
+            stages={data.stages}
+            leads={filteredLeads}
+            visibles={etapasVisibles}
+            onChange={guardarEtapasVisibles}
+          />
+        )}
+      </BotonesDeEvento>
       <div className="eleg-filtros-funil">
         <FilterBar
           filters={filters}
@@ -582,6 +596,7 @@ export function PipelinePageClient({
           denso={cardsCompactos}
           corNaColuna={corNaColuna}
           somenteLeitura={arquivado}
+          etapasVisiveis={etapasVisibles}
         />
       )}
       {!arquivado && (

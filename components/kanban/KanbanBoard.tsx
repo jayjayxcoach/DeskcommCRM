@@ -72,6 +72,11 @@ interface KanbanBoardProps {
    * É a razão de o funil arquivado ser abrível sem desarquivar.
    */
   somenteLeitura?: boolean;
+  /**
+   * Elegancia: etapas que quien mira eligió ver (`SelectorDeEtapas`). Solo
+   * esconde COLUMNAS; los menús de "mover a…" siguen con todas. `null` = todas.
+   */
+  etapasVisiveis?: ReadonlySet<string> | null;
 }
 
 function groupLeadsByStage(stages: Stage[], leads: Lead[]): Map<string, Lead[]> {
@@ -125,6 +130,7 @@ export function KanbanBoard({
   denso = false,
   corNaColuna = false,
   somenteLeitura = false,
+  etapasVisiveis = null,
 }: KanbanBoardProps) {
   const [tactil] = useState(
     () => typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches === true,
@@ -454,7 +460,7 @@ export function KanbanBoard({
           className="flex min-h-full w-max items-stretch gap-3"
           data-faixa-das-etapas
         >
-          {etapasDoQuadro.map((stage) => (
+          {etapasDoQuadro.filter((s) => !etapasVisiveis || etapasVisiveis.has(s.id)).map((stage) => (
             <StageColumn
               key={stage.id}
               stage={stage}

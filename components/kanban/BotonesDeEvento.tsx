@@ -7,7 +7,7 @@
  * primera-comunion). Solo aparecen los eventos que existen en el quadro: en una
  * organización sin esas etiquetas la fila no se dibuja y nada cambia.
  */
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import type { LeadFilters } from "@/lib/kanban/filters";
 import { marcadoresDoFiltro } from "@/lib/kanban/filters";
@@ -26,9 +26,11 @@ interface Props {
   filters: LeadFilters;
   onChange: (f: LeadFilters) => void;
   leads: Lead[];
+  /** Algo más al final de la fila (el selector de etapas). */
+  children?: ReactNode;
 }
 
-export function BotonesDeEvento({ filters, onChange, leads }: Props) {
+export function BotonesDeEvento({ filters, onChange, leads, children }: Props) {
   const cuenta = useMemo(() => {
     const c = new Map<string, number>();
     for (const lead of leads) {
@@ -39,7 +41,10 @@ export function BotonesDeEvento({ filters, onChange, leads }: Props) {
   }, [leads]);
 
   const presentes = EVENTOS.filter((e) => (cuenta.get(e.tag) ?? 0) > 0);
-  if (presentes.length === 0) return null;
+  if (presentes.length === 0)
+    return children ? (
+      <div className="eleg-eventos flex flex-wrap items-center gap-2">{children}</div>
+    ) : null;
 
   const elegidas = marcadoresDoFiltro(filters.tag);
   const activo = elegidas.length === 1 ? elegidas[0] : null;
@@ -76,6 +81,7 @@ export function BotonesDeEvento({ filters, onChange, leads }: Props) {
           <span className="text-xs opacity-60">{cuenta.get(e.tag)}</span>
         </button>
       ))}
+      {children}
     </div>
   );
 }
