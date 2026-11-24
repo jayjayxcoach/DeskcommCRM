@@ -352,3 +352,23 @@ body:has([data-marca-org][data-aparencia="elegancia"]):not(:has(.eleg-sel-caja[a
 .eleg-buscar-txt b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .eleg-buscar-txt small { font-size: 12px; opacity: .6; }
 .eleg-buscar-vacio { text-align: center; font-size: 13px; opacity: .6; padding: 10px; }
+
+/* ── Resumen: botón cuadrado "Organizar" y modo de ordenar cuadros ── */
+.eleg-sq { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: var(--eleg-glass); border: 1px solid var(--eleg-rim); -webkit-backdrop-filter: var(--eleg-blur); backdrop-filter: var(--eleg-blur); box-shadow: var(--eleg-shadow); color: var(--eleg-text); flex: none; cursor: pointer; transition: transform .15s ease, background .15s ease; }
+.eleg-sq:hover { transform: translateY(-1px); }
+.eleg-sq.activo { background: var(--eleg-logo); color: var(--eleg-on-logo); border-color: transparent; }
+.eleg-bloque-in > * { flex: 1 1 auto; }
+.eleg-aviso-orden { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 16px; border-radius: 16px; font-size: 13.5px; background: var(--eleg-glass); border: 1px dashed var(--eleg-line); -webkit-backdrop-filter: var(--eleg-blur); backdrop-filter: var(--eleg-blur); color: var(--eleg-text); }
+.eleg-btn-pri, .eleg-btn-sec { font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 99px; cursor: pointer; }
+.eleg-btn-pri { background: var(--eleg-logo); color: var(--eleg-on-logo); }
+.eleg-btn-sec { border: 1px solid var(--eleg-line); color: var(--eleg-text); }
+.eleg-orden-caja { border-radius: 22px; outline: 2px dashed var(--eleg-line); outline-offset: 4px; cursor: grab; transition: opacity .15s ease, outline-color .15s ease, transform .15s ease; }
+.eleg-orden-caja.arrastrando { opacity: .4; cursor: grabbing; }
+.eleg-orden-caja.encima { outline-color: var(--eleg-logo); transform: scale(.99); }
+.eleg-orden-caja.oculto .eleg-orden-contenido { opacity: .3; filter: grayscale(1); }
+.eleg-orden-contenido { pointer-events: none; user-select: none; }
+.eleg-orden-barra { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 6px 8px 6px 10px; border-radius: 14px; font-size: 13px; background: var(--eleg-float); box-shadow: var(--eleg-pop); color: var(--eleg-text); }
+.eleg-orden-asa { opacity: .55; flex: none; }
+.eleg-orden-barra button { min-width: 32px; height: 32px; padding: 0 8px; border-radius: 10px; display: grid; place-items: center; border: 1px solid var(--eleg-line); color: var(--eleg-text); font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.eleg-orden-barra button:hover:not(:disabled) { background: var(--eleg-well); }
+.eleg-orden-barra button:disabled { opacity: .3; cursor: default; }
