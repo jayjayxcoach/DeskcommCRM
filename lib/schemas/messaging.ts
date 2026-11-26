@@ -599,6 +599,15 @@ export const listConversationsQuerySchema = z.object({
    * para o conjunto do contato.
    */
   contact_id: z.string().uuid().optional(),
+  /**
+   * Elegancia: ETAPAS DEL EMBUDO, ids separados por coma. Solo las conversaciones
+   * cuya clienta tiene su pedido principal en una de ellas
+   * (`lib/elegancia/etapa-del-contacto.ts`). Ausente = sin filtro.
+   */
+  etapa: z
+    .string()
+    .regex(/^[0-9a-fA-F-]{36}(,[0-9a-fA-F-]{36}){0,39}$/)
+    .optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });

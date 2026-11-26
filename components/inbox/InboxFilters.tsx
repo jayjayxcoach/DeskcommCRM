@@ -38,6 +38,8 @@ import { useConversationCounts } from "@/hooks/inbox/useConversationCounts";
 import { useDepoisDeMontar } from "@/hooks/ui/useDepoisDeMontar";
 import { roleAtLeast, type Role, type VisibilityMode } from "@/lib/auth/types";
 import { SeletorDeAtendente } from "@/components/inbox/SeletorDeAtendente";
+import { SelectorDeEtapas } from "@/components/kanban/SelectorDeEtapas";
+import type { Stage } from "@/lib/kanban/types";
 import { DialogoDasAbas } from "@/components/inbox/DialogoDasAbas";
 import type { Sector } from "@/hooks/team/useSectors";
 import { abasPadrao, faixaDaPessoa, type AbaDaPessoa } from "@/lib/inbox/abas-da-inbox";
@@ -137,6 +139,11 @@ export interface InboxFiltersValue {
    * seletor que muda a tela sem mudar a lista seria pior que seletor nenhum.
    */
   sector_id?: string;
+  /**
+   * Elegancia: las ETAPAS DEL EMBUDO elegidas (ids). Ausente = todas. Se guarda
+   * por aparato (InboxLayout) y no cambia ningún pedido.
+   */
+  etapas?: string[];
 }
 
 /**
@@ -213,9 +220,17 @@ interface Props {
    * = o padrão, que é a faixa de hoje.
    */
   abasIniciais?: AbaDaPessoa[];
+  /** Elegancia: las etapas del embudo principal, para el selector de etapas. */
+  etapasDelEmbudo?: Stage[];
 }
 
-export function InboxFilters({ value, onChange, filas: filasDaOrganizacao, abasIniciais }: Props) {
+export function InboxFilters({
+  value,
+  onChange,
+  filas: filasDaOrganizacao,
+  abasIniciais,
+  etapasDelEmbudo,
+}: Props) {
   const t = useT();
   const [abasDaPessoa, setAbasDaPessoa] = useState<AbaDaPessoa[]>(() => abasIniciais ?? abasPadrao());
   const [organizandoAbas, setOrganizandoAbas] = useState(false);
@@ -580,6 +595,20 @@ export function InboxFilters({ value, onChange, filas: filasDaOrganizacao, abasI
     return () => clearTimeout(t);
   }, [searchInput]);
 
+  // Elegancia: las etapas elegidas que aún existen (un id viejo no filtra nada).
+  const etapasVisibles = (() => {
+    if (!value.etapas || !etapasDelEmbudo) return null;
+    const existentes = new Set(etapasDelEmbudo.filter((e) => !e.is_archived).map((e) => e.id));
+    const validas = value.etapas.filter((id) => existentes.has(id));
+    return validas.length > 0 ? new Set(validas) : null;
+  })();
+  const nombresDeEtapas = etapasVisibles
+    ? (() => {
+        const n = (etapasDelEmbudo ?? []).filter((e) => etapasVisibles.has(e.id)).map((e) => e.name);
+        return n.length <= 2 ? n.join(" · ") : `${n.length} etapas`;
+      })()
+    : null;
+
   return (
     <div className="border-b border-border bg-background">
       <button
@@ -590,6 +619,9 @@ export function InboxFilters({ value, onChange, filas: filasDaOrganizacao, abasI
       >
         <MagnifyingGlass size={15} weight="regular" aria-hidden />
         {filtrosAbiertos ? "Ocultar filtros" : "Buscar y filtrar"}
+        {!filtrosAbiertos && nombresDeEtapas && (
+          <span className="eleg-inbox-filtros-etapa">· {nombresDeEtapas}</span>
+        )}
       </button>
       <div className="eleg-inbox-filtros space-y-2 px-3 pt-3 pb-2" data-abierto={filtrosAbiertos ? "" : undefined}>
         <div className="flex items-center gap-2">
@@ -885,6 +917,20 @@ export function InboxFilters({ value, onChange, filas: filasDaOrganizacao, abasI
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        )}
+
+        {/* Elegancia: ver solo las clientas de una o varias etapas del embudo
+            (igual que "☰ Etapas" del Embudo). Solo vista: no mueve pedidos. */}
+        {etapasDelEmbudo && etapasDelEmbudo.length > 0 && (
+          <div className="flex gap-2">
+            <SelectorDeEtapas
+              stages={etapasDelEmbudo}
+              visibles={etapasVisibles}
+              onChange={(ids) => onChange({ ...value, etapas: ids ?? undefined })}
+              className="h-9 w-full min-w-0 pl-1 pr-3 text-xs"
+              textoSinFiltro="Todas las etapas"
+            />
           </div>
         )}
       </div>

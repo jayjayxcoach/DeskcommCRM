@@ -18,6 +18,7 @@ import { extractBearer } from "@/lib/mcp/auth";
 import { listConversationsQuerySchema } from "@/lib/schemas";
 import { createClient } from "@/lib/supabase/server";
 import { comNomeDoAtendente } from "@/lib/users/com-nome-do-atendente";
+import { conEtapaDelEmbudo } from "@/lib/elegancia/etapa-del-contacto";
 
 import { listConversationsHandler } from "./_handler";
 
@@ -129,6 +130,8 @@ async function responderLista(
     // é o único lugar que pode esquecer sem erro nenhum. A cerca
     // `rota-le-todo-filtro-do-schema` cobra a chave.
     pessoais: url.searchParams.get("pessoais") ?? undefined,
+    // Elegancia: filtro por etapa del embudo (ids separados por coma).
+    etapa: url.searchParams.get("etapa") ?? undefined,
     cursor: url.searchParams.get("cursor") ?? undefined,
     limit: url.searchParams.get("limit") ?? undefined,
   });
@@ -154,7 +157,11 @@ async function responderLista(
     // handler é compartilhado com as tools MCP, que já resolvem o nome por conta
     // própria (`lib/mcp/tools/conversations.ts`) — enriquecer lá faria a mesma
     // leitura duas vezes por chamada do agente.
-    return ok(await comNomeDoAtendente(organizationId, conversations), {
+    // Elegancia: la etapa del embudo de cada clienta (etiqueta de color en la
+    // Bandeja). En la borda HTTP, como el nombre del atendente: las tools MCP no
+    // la necesitan.
+    const conEtapa = await conEtapaDelEmbudo(supabase, organizationId, conversations);
+    return ok(await comNomeDoAtendente(organizationId, conEtapa), {
       requestId,
       meta: { cursor, has_more },
     });

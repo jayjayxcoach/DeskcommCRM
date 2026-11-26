@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { colorDeEtapa } from "@/lib/elegancia/etapa-del-contacto";
 import { ordenarEtapasDoFunil } from "@/lib/kanban/ordem-das-etapas";
 import type { Stage } from "@/lib/kanban/types";
 import type { Lead } from "@/lib/types/leads";
@@ -61,19 +62,31 @@ export function useEtapasVisibles(pipelineId: string, stages: Stage[] | undefine
 
 interface Props {
   stages: Stage[];
-  leads: Lead[];
+  /** Para contar cuántos pedidos hay en cada etapa. Sin esto no se muestran cuentas. */
+  leads?: Lead[];
   visibles: ReadonlySet<string> | null;
   onChange: (ids: string[] | null) => void;
+  /** Clases extra del botón (la Bandeja lo pone a lo ancho de la columna). */
+  className?: string;
+  /** Texto del botón cuando no hay filtro. */
+  textoSinFiltro?: string;
 }
 
-export function SelectorDeEtapas({ stages, leads, visibles, onChange }: Props) {
+export function SelectorDeEtapas({
+  stages,
+  leads,
+  visibles,
+  onChange,
+  className,
+  textoSinFiltro = "Etapas",
+}: Props) {
   const etapas = useMemo(
     () => ordenarEtapasDoFunil(stages).filter((s) => !s.is_archived),
     [stages],
   );
   const cuenta = useMemo(() => {
     const c = new Map<string, number>();
-    for (const l of leads) c.set(l.stage_id, (c.get(l.stage_id) ?? 0) + 1);
+    for (const l of leads ?? []) c.set(l.stage_id, (c.get(l.stage_id) ?? 0) + 1);
     return c;
   }, [leads]);
 
@@ -82,7 +95,7 @@ export function SelectorDeEtapas({ stages, leads, visibles, onChange }: Props) {
   const filtrando = visibles !== null;
   const nombres = etapas.filter((e) => visibles?.has(e.id)).map((e) => e.name);
   const etiqueta = !filtrando
-    ? "Etapas"
+    ? textoSinFiltro
     : nombres.length <= 2
       ? nombres.join(" · ")
       : `${nombres.length} etapas`;
@@ -107,13 +120,14 @@ export function SelectorDeEtapas({ stages, leads, visibles, onChange }: Props) {
             filtrando
               ? "border-transparent bg-accent text-accent-foreground"
               : "border-border bg-surface text-text hover:bg-surface-elevated",
+            className,
           )}
           aria-label="Elegir qué etapas ver"
         >
           <span className="grid h-7 w-7 place-items-center rounded-full bg-background text-[13px] text-text">
             ☰
           </span>
-          <span className="max-w-[14rem] truncate">{etiqueta}</span>
+          <span className="min-w-0 max-w-[14rem] flex-1 truncate text-left">{etiqueta}</span>
           <span className="text-xs opacity-60">▾</span>
         </button>
       </PopoverTrigger>
@@ -156,10 +170,12 @@ export function SelectorDeEtapas({ stages, leads, visibles, onChange }: Props) {
                   </span>
                   <span
                     className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ background: e.color ?? "var(--color-muted-foreground, #999)" }}
+                    style={{ background: colorDeEtapa(e, stages) }}
                   />
                   <span className="flex-1 truncate">{e.name}</span>
-                  <span className="text-xs text-muted-foreground">{cuenta.get(e.id) ?? 0}</span>
+                  {leads && (
+                    <span className="text-xs text-muted-foreground">{cuenta.get(e.id) ?? 0}</span>
+                  )}
                 </button>
               </li>
             );

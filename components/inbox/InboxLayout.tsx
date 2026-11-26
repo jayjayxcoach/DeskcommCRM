@@ -53,6 +53,7 @@ import { togglePainelDoContato } from "@/app/actions/inbox/togglePainelDoContato
 import type { AvisoDeRascunho } from "@/lib/inbox/rascunho-sugerido";
 import { buscaValeConsulta } from "@/lib/inbox/termo-de-busca";
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
+import { useDefaultPipeline } from "@/hooks/pipelines/useDefaultPipeline";
 import { useAlturaVisivel } from "@/lib/ui/altura-visivel";
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import {
@@ -362,6 +363,7 @@ export function InboxLayout({
       ...atual,
       channel_session_id: lembrados.channel_session_id,
       onlyUnread: lembrados.onlyUnread ?? false,
+      etapas: leerEtapasDeLaBandeja(orgId),
     }));
     // O contexto acompanha o estado restaurado no PRÓXIMO render. Uma ref
     // marcada aqui liberaria o efeito de gravação com os filtros anteriores.
@@ -374,11 +376,18 @@ export function InboxLayout({
       onlyUnread: aux.onlyUnread,
     });
   }, [orgId, orgDosFiltros, aux.channel_session_id, aux.onlyUnread]);
+  // Elegancia: las etapas elegidas se guardan en este aparato, por organización.
+  useEffect(() => {
+    if (!orgId || orgDosFiltros !== orgId) return;
+    guardarEtapasDeLaBandeja(orgId, aux.etapas);
+  }, [orgId, orgDosFiltros, aux.etapas]);
   const filterValue: InboxFiltersValue = {
     tab,
     ...aux,
     // Uma troca de organização não leva o número anterior nem à consulta.
-    ...(orgDosFiltros !== orgId ? { channel_session_id: undefined, onlyUnread: false } : {}),
+    ...(orgDosFiltros !== orgId
+      ? { channel_session_id: undefined, onlyUnread: false, etapas: undefined }
+      : {}),
   };
   const setFilterValue = useCallback(
     (next: InboxFiltersValue) => {
@@ -501,6 +510,13 @@ export function InboxLayout({
   const { data: automaticoDaOrg, isLoading: automaticoCarregando } = useAutomaticoAtivo();
   const composerRef = useRef<ComposerHandle | null>(null);
 
+  // Elegancia: las etapas del embudo principal (selector de la Bandeja). Un id
+  // guardado que ya no existe (etapa borrada o archivada) no filtra: se ignora.
+  const { data: embudoPrincipal } = useDefaultPipeline(!!orgId);
+  const etapasDelEmbudo = embudoPrincipal?.stages;
+  // Texto y no lista: la dependencia del `useMemo` de abajo queda estable.
+  const etapasDelFiltro = (etapasValidas(orgDosFiltros === orgId ? aux.etapas : undefined, etapasDelEmbudo) ?? []).join(",");
+
   const filters: ConversationsFilters = useMemo(
     () => ({
       ...tabToFilter(filterValue.tab, automaticoDaOrg),
@@ -523,8 +539,10 @@ export function InboxLayout({
       tagMode: filterValue.tagMode,
       unread: filterValue.onlyUnread || undefined,
       is_group: filterValue.onlyGroups || undefined,
+      etapas: etapasDelFiltro ? etapasDelFiltro.split(",") : undefined,
     }),
     [
+      etapasDelFiltro,
       filterValue.tab,
       automaticoDaOrg,
       filterValue.assigned_to,
@@ -1012,6 +1030,7 @@ export function InboxLayout({
           onChange={setFilterValue}
           filas={filasDaOrganizacao?.data ?? []}
           abasIniciais={abasDaInbox}
+          etapasDelEmbudo={etapasDelEmbudo}
         />
         {podeAgirEmLote && (
           <BarraDeAcoesEmLote
@@ -1382,4 +1401,41 @@ export function InboxLayout({
     </div>
     </OpenConversationProvider>
   );
+}
+
+const claveEtapasBandeja = (orgId: string) => `eleg-etapas-bandeja:${orgId}`;
+
+/** Elegancia: etapas del embudo elegidas en la Bandeja, guardadas en este aparato. */
+function leerEtapasDeLaBandeja(orgId: string): string[] | undefined {
+  try {
+    const crudo = window.localStorage.getItem(claveEtapasBandeja(orgId));
+    const lista = crudo ? (JSON.parse(crudo) as unknown) : null;
+    return Array.isArray(lista) && lista.length > 0 ? lista.map(String) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function guardarEtapasDeLaBandeja(orgId: string, etapas: string[] | undefined): void {
+  try {
+    if (etapas && etapas.length > 0) {
+      window.localStorage.setItem(claveEtapasBandeja(orgId), JSON.stringify(etapas));
+    } else {
+      window.localStorage.removeItem(claveEtapasBandeja(orgId));
+    }
+  } catch {
+    /* aparato sin almacenamiento: el filtro vale mientras la página esté abierta */
+  }
+}
+
+/** Elegancia: los ids elegidos que aún son etapas activas; `undefined` = sin filtro. */
+function etapasValidas(
+  elegidas: string[] | undefined,
+  delEmbudo: { id: string; is_archived: boolean }[] | undefined,
+): string[] | undefined {
+  if (!elegidas || elegidas.length === 0) return undefined;
+  if (!delEmbudo) return elegidas;
+  const existentes = new Set(delEmbudo.filter((e) => !e.is_archived).map((e) => e.id));
+  const validas = elegidas.filter((id) => existentes.has(id));
+  return validas.length > 0 ? validas : undefined;
 }

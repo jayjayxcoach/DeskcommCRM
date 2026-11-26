@@ -46,53 +46,25 @@ const pintar = (conv: ConversationWithContact, mostrarCanal: boolean) =>
   );
 
 describe("mostra POR ONDE a conversa entrou — o canal da empresa, nunca o cliente", () => {
-  // #2383: o rótulo passou a ser o MESMO da tela de canais (`nomeDoCanal`),
-  // com o nome amigável na frente. Antes era `phone_number ?? display_name` e
-  // um canal que a dona chamou de "MP wp" saía aqui como o número cru — o
-  // número que ela não reconhece, no lugar do nome que ela escolheu. Medido:
-  // o MESMO canal renderiza "+19392301037" na lista e "MP wp" em /connections.
-  it("pinta o NOME do canal — o número cru só entra quando não há nome", () => {
-    pintar(comCanal({ phone_number: "+19392301037", display_name: "MP wp" }), true);
-    expect(screen.getByText("MP wp")).toBeInTheDocument();
+  // Elegancia (26-nov-2026, pedido do dono): o número da empresa saía como selo
+  // em TODA linha — o mesmo número repetido na lista inteira. A faixa agora
+  // mostra a ETAPA DO FUNIL da cliente; o canal fica no logo sobre a foto e o
+  // nome dele no `title` do avatar (passar o mouse), com o mesmo rótulo de
+  // `/app/connections` (#2383).
+  it("o número da empresa não aparece mais como texto na linha", () => {
+    pintar(comCanal({ phone_number: "+19392301037", display_name: null }), true);
     expect(screen.queryByText("+19392301037")).not.toBeInTheDocument();
   });
 
-  it("sem nome amigável, o número é o que sobra — e ele aparece", () => {
-    pintar(comCanal({ phone_number: "+19392301037", display_name: null }), true);
-    expect(screen.getByText("+19392301037")).toBeInTheDocument();
+  it("pinta o NOME do canal no title — o número cru só entra quando não há nome", () => {
+    pintar(comCanal({ phone_number: "+19392301037", display_name: "MP wp" }), true);
+    expect(screen.getByTitle("Entrou por MP wp")).toBeInTheDocument();
+    expect(screen.queryByTitle("Entrou por +19392301037")).not.toBeInTheDocument();
   });
 
   it("cai no NOME do canal quando ainda não há número", () => {
-    // Canal recém-conectado pode não ter número resolvido; mostrar nada seria
-    // pior que mostrar como ele se chama.
     pintar(comCanal({ phone_number: null, display_name: "Canal novo" }), true);
-    expect(screen.getByText("Canal novo")).toBeInTheDocument();
-  });
-
-  it("dois números do MESMO provider continuam distinguíveis — nome/número", () => {
-    // #2383 (critério 4): "Peças" e a linha sem apelido são as MESMAS
-    // wa_conversations/waha no mesmo provider; o que as separa na lista é o
-    // nome amigável, e o número entra onde não há nome. Duas linhas iguais na
-    // lista seriam o atendente respondendo no canal errado.
-    const mesmoProvider = (canal: { phone_number: string | null; display_name: string | null }) =>
-      ({ ...comCanal(canal), channel: "whatsapp", provider: "waha" }) as ConversationWithContact;
-
-    pintar(mesmoProvider({ phone_number: "+55179991111", display_name: "Peças" }), true);
-    pintar(mesmoProvider({ phone_number: "+55179992222", display_name: null }), true);
-
-    expect(screen.getByText("Peças")).toBeInTheDocument();
-    expect(screen.getByText("+55179992222")).toBeInTheDocument();
-    expect(screen.queryByText("+55179991111")).not.toBeInTheDocument();
-  });
-
-  it("nome de canal comprido encolhe — `min-w-0` + `max-w` + `truncate` na faixa", () => {
-    // #2383 (critério 5): a linha de selos é `flex-wrap`; sem limite o nome
-    // "Centro Automotivo Norte" levaria a faixa inteira para fora da coluna.
-    pintar(comCanal({ phone_number: null, display_name: "Centro Automotivo Norte" }), true);
-    const badge = screen.getByTitle("Entrou por Centro Automotivo Norte");
-    expect(badge.className).toContain("max-w-");
-    expect(badge.className).toContain("truncate");
-    expect(badge.querySelector("span.truncate")).not.toBeNull();
+    expect(screen.getByTitle("Entrou por Canal novo")).toBeInTheDocument();
   });
 
   it("explica o rótulo no title — o número solto não diz o que é", () => {
@@ -101,11 +73,27 @@ describe("mostra POR ONDE a conversa entrou — o canal da empresa, nunca o clie
   });
 
   it("não confunde com o número do CLIENTE", () => {
-    // O contato tem +595999; o canal tem +1939. O que aparece no badge é o da
-    // EMPRESA — trocar os dois faria o atendente ligar para si mesmo.
     pintar(comCanal({ phone_number: "+19392301037", display_name: null }), true);
     expect(screen.getByTitle("Entrou por +19392301037")).toBeInTheDocument();
     expect(screen.queryByTitle("Entrou por +595999")).not.toBeInTheDocument();
+  });
+
+  it("a ETAPA DO FUNIL aparece com a cor da etapa", () => {
+    pintar(
+      {
+        ...comCanal({ phone_number: "+19392301037", display_name: null }),
+        etapa_del_embudo: { id: "e1", nombre: "Diseño", color: "#6f9a16" },
+      } as ConversationWithContact,
+      true,
+    );
+    const selo = screen.getByTestId("etapa-del-embudo");
+    expect(selo).toHaveTextContent("Diseño");
+    expect(selo.querySelector("span")?.getAttribute("style")).toContain("rgb(111, 154, 22)");
+  });
+
+  it("sem pedido, nenhum selo de etapa", () => {
+    pintar({ ...comCanal(null), etapa_del_embudo: null } as ConversationWithContact, true);
+    expect(screen.queryByTestId("etapa-del-embudo")).not.toBeInTheDocument();
   });
 });
 

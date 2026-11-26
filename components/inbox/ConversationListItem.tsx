@@ -283,11 +283,13 @@ export function ConversationListItem({
     ? t("Deixar de usar como exemplo")
     : t("Usar como exemplo para a IA");
 
+  const etapa = conversation.etapa_del_embudo ?? null;
+
   const temSelos =
     visibleTags.length > 0 ||
     exemploMarcado ||
     (mostrarAtendente && comando.quem === "humano") ||
-    (mostrarCanal && rotuloCanal != null) ||
+    etapa != null ||
     Boolean(c?.is_blocked) ||
     Boolean(c?.is_anonymized);
 
@@ -394,7 +396,10 @@ export function ConversationListItem({
       {isSelected && (
         <span className="absolute inset-y-0 left-0 w-0.5 bg-accent" aria-hidden />
       )}
-      <div className="relative shrink-0">
+      <div
+        className="relative shrink-0"
+        title={mostrarCanal && rotuloCanal ? `${t("Entrou por")} ${rotuloCanal}` : undefined}
+      >
         <Avatar className="h-10 w-10">
           {/* Só monta a <img> quando existe arquivo: sem isso o browser pediria
               a rota para TODO contato da lista e levaria 404 em cada um sem
@@ -517,6 +522,21 @@ export function ConversationListItem({
 
         {temSelos && (
           <div className="mt-1.5 flex flex-wrap items-center gap-1">
+            {/* Elegancia: en lugar del número de la empresa (el mismo en todas
+                las filas), la ETAPA DEL EMBUDO de la clienta con su color. El
+                canal sigue en el logo sobre la foto (y su nombre al pasar el
+                mouse). */}
+            {etapa && (
+              <span
+                data-testid="etapa-del-embudo"
+                className="inline-flex h-4 min-w-0 max-w-[10rem] items-center gap-1 rounded-full border px-1.5 text-[10px] font-medium text-text"
+                style={{ background: `${etapa.color}29`, borderColor: `${etapa.color}66` }}
+                title={`Etapa del embudo: ${etapa.nombre}`}
+              >
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: etapa.color }} aria-hidden />
+                <span className="truncate">{etapa.nombre}</span>
+              </span>
+            )}
             {/* O SELO DO EXEMPLO vem ANTES das etiquetas de propósito: a faixa
                 mostra no máximo 2 etiquetas e as que sobram viram "+N". Um
                 estado que decide se a conversa entra na base de conhecimento
@@ -539,20 +559,6 @@ export function ConversationListItem({
             )}
             {mostrarAtendente && comando.quem === "humano" && (
               <OwnerBadge ownerKind="user" ownerName={comando.nome ?? t("Atendente")} compacto />
-            )}
-            {/* #2383: `min-w-0` + `max-w` + `truncate` — o mesmo tratamento do
-                badge do cabeçalho. Uma linha de badges é `flex-wrap`, então um
-                nome de canal comprido ESTOURARIA a faixa para fora da coluna da
-                lista (critério de aceite: layout utilizável com nomes maiores).
-                O `title` devolve o texto inteiro para quem passa o mouse. */}
-            {mostrarCanal && rotuloCanal && (
-              <Badge
-                variant="outline"
-                className="h-4 min-w-0 max-w-[9rem] gap-1 truncate px-1.5 text-[10px] font-normal text-text-muted"
-                title={`${t("Entrou por")} ${rotuloCanal}`}
-              >
-                <span className="truncate">{rotuloCanal}</span>
-              </Badge>
             )}
             {c?.is_blocked && (
               <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">

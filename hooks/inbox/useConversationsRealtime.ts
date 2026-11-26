@@ -80,6 +80,12 @@ export type ConversationWithContact = Conversation & {
    * responsável": o dono é o `assigned_to_user_id`, o nome é a cortesia.
    */
   assigned_to_user_name?: string | null;
+  /**
+   * Elegancia: la etapa del embudo del pedido principal de la clienta, con el
+   * color del embudo (`lib/elegancia/etapa-del-contacto.ts`). `null` = sin
+   * pedido; ausente = respuesta en caché de antes del campo.
+   */
+  etapa_del_embudo?: { id: string; nombre: string; color: string } | null;
 };
 
 /** O vocabulário de LEITURA (7), que inclui os dois estados que só o motor escreve. */
@@ -136,6 +142,8 @@ export interface ConversationsFilters {
    * fora da lista de trabalho.
    */
   pessoais?: boolean;
+  /** Elegancia: solo las clientas en estas etapas del embudo (ids). */
+  etapas?: readonly string[];
 }
 
 interface ListResponse {
@@ -219,6 +227,7 @@ export function useConversationsRealtime(
       // sempre (pessoal fora da lista), e um `&pessoais=false` colado num link
       // de hoje mudaria a URL sem mudar o sentido.
       if (filters.pessoais) qs.set("pessoais", "true");
+      if (filters.etapas && filters.etapas.length > 0) qs.set("etapa", filters.etapas.join(","));
       if (pageParam) qs.set("cursor", pageParam);
       qs.set("limit", "50");
       try {

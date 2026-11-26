@@ -22,6 +22,7 @@ import { ORDEM_DA_ESPERA, ehAFila, comPreFiltroDoComando } from "@/lib/inbox/com
 import { aplicarMarcadores } from "@/lib/inbox/marcador-da-conversa";
 import { exigirControleDaConversa } from "@/lib/inbox/controle-da-conversa";
 import { TETO_DE_PESSOAIS, podeVerPessoal } from "@/lib/inbox/pessoal";
+import { contactosEnEtapas } from "@/lib/elegancia/etapa-del-contacto";
 
 // O escape da gramática do `or=` mora na régua única (`lib/inbox/termo-de-busca`);
 // continua exportado daqui porque é daqui que os testes o leem desde a #3918.
@@ -329,6 +330,18 @@ export async function listConversationsHandler(
   // manual de organização é a única barreira, e uma consulta nova nasceria
   // sem nenhuma.
   if (q.contact_id) query = query.eq("contact_id", q.contact_id);
+  // Elegancia: ETAPAS DEL EMBUDO. Solo las clientas cuyo pedido principal está
+  // en una de las etapas elegidas (la misma regla que pinta la etiqueta de la
+  // fila). Los ids viajan en la URL, así que se cortan al presupuesto; vienen
+  // del pedido más reciente al más viejo, y lo que se pierde es lo de abajo.
+  if (q.etapa) {
+    const etapas = q.etapa.split(",").filter(Boolean);
+    const ids = idsQueCabemNaURL(
+      await contactosEnEtapas(supabase, ctx.organization_id, etapas),
+    );
+    if (ids.length === 0) return { conversations: [], cursor: null, has_more: false };
+    query = query.in("contact_id", ids);
+  }
   // A aba "Grupos" (Task 10). `undefined` (ausente) = sem filtro, a lista
   // mostra tudo, como hoje — checagem explícita contra `undefined`, e não
   // `if (q.is_group)`, porque `"false"` é um valor válido e verdadeiro-truthy
