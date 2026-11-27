@@ -18,6 +18,7 @@ import { useActiveOrg, useUser } from "@/hooks/auth/AuthProvider";
 import { useAgentInbox } from "@/hooks/ai/useAgentInbox";
 import { useOrganizationTransition } from "../OrganizationTransitionProvider";
 import { UserMenu } from "../UserMenu";
+import { BuscadorGlobal, abrirBuscador } from "./BuscadorGlobal";
 import { useCuentaBandeja } from "./DockElegancia";
 import { MENU, estaActiva } from "./destinos";
 import { Icono } from "./Iconos";
@@ -102,6 +103,12 @@ export function TopBarElegancia() {
         ))}
       </nav>
       <div className="eleg-acts">
+        <button type="button" className="eleg-cb eleg-bg-boton" onClick={abrirBuscador} aria-label="Buscar (Ctrl+K)" title="Buscar en todo el CRM (Ctrl+K)">
+          <Icono nombre="search" />
+          <span className="eleg-solo-pc">Buscar</span>
+          <kbd className="eleg-solo-pc">Ctrl K</kbd>
+        </button>
+        <BuscadorGlobal />
         <Link className="eleg-cb eleg-solo-pc" href="/app/inbox?filter=all" aria-label="Bandeja">
           <Icono nombre="inbox" />
         </Link>

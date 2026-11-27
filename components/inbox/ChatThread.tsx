@@ -4,6 +4,7 @@ import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 
 import type { Locale } from "date-fns";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useT } from "@/hooks/i18n/useT";
 import { format, isToday, isYesterday } from "date-fns";
@@ -266,6 +267,27 @@ export function ChatThread({
       DESTAQUE_DA_CITADA_MS,
     );
   }
+
+  // Elegancia — buscador global (Ctrl+K): `?msg=<id>&en=<conversa>` salta a ESE
+  // mensaje y lo resalta, una sola vez por mensaje. `en` evita buscarlo en otro
+  // chat si la persona cambia de conversación con la URL vieja.
+  const parametros = useSearchParams();
+  const msgDeLaBusqueda = parametros?.get("msg") ?? null;
+  const convDeLaBusqueda = parametros?.get("en") ?? null;
+  const saltoHecho = useRef<string | null>(null);
+  const listoParaSaltar = !!conversationId && !q.isLoading && !q.isError && items.length > 0;
+  useEffect(() => {
+    if (!msgDeLaBusqueda || !listoParaSaltar || convDeLaBusqueda !== conversationId) return;
+    const clave = `${conversationId}:${msgDeLaBusqueda}`;
+    if (saltoHecho.current === clave) return;
+    // Deja terminar la bajada automática al final antes de subir al mensaje.
+    const espera = setTimeout(() => {
+      saltoHecho.current = clave;
+      void irParaCitada(msgDeLaBusqueda);
+    }, 350);
+    return () => clearTimeout(espera);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [msgDeLaBusqueda, convDeLaBusqueda, conversationId, listoParaSaltar]);
 
   // Só o TERMO leva à ocorrência. Depender do conjunto de resultados faria cada
   // mensagem nova do tempo real arrancar quem lê de volta à primeira ocorrência.

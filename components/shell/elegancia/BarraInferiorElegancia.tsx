@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { useTheme } from "@/lib/theme";
 import { usePecaDoRodape, type PecaDoRodape } from "@/lib/ui/rodape-ocupado";
 
+import { abrirBuscador } from "./BuscadorGlobal";
 import { BuscarRapido } from "./BuscarRapido";
 import { useCuentaBandeja } from "./DockElegancia";
 import { ABAJO, MENU, estaActiva, type Destino } from "./destinos";
@@ -104,7 +105,15 @@ export function BarraInferiorElegancia() {
                   </span>
                   {oscuro ? "Tema claro" : "Tema oscuro"}
                 </button>
-                <button type="button" className="eleg-mas-item" onClick={() => setBuscando(true)}>
+                <button
+                  type="button"
+                  className="eleg-mas-item"
+                  onClick={() => {
+                    setAbierto(false);
+                    // Mismo buscador que Ctrl+K: contactos, mensajes y pedidos.
+                    setTimeout(abrirBuscador, 180);
+                  }}
+                >
                   <span className="eleg-mas-ico">
                     <Icono nombre="search" />
                   </span>

@@ -373,3 +373,46 @@ body:has([data-marca-org][data-aparencia="elegancia"]):not(:has(.eleg-sel-caja[a
 .eleg-orden-barra button { min-width: 32px; height: 32px; padding: 0 8px; border-radius: 10px; display: grid; place-items: center; border: 1px solid var(--eleg-line); color: var(--eleg-text); font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .eleg-orden-barra button:hover:not(:disabled) { background: var(--eleg-well); }
 .eleg-orden-barra button:disabled { opacity: .3; cursor: default; }
+
+/* ── Buscador global (Ctrl+K) ── */
+.eleg-bg-boton { width: auto; min-width: 46px; padding: 0 14px; border-radius: 999px; display: flex; gap: 8px; align-items: center; cursor: pointer; font-size: 14px; }
+.eleg-bg-boton .eleg-i, .eleg-bg-boton svg { width: 19px; height: 19px; }
+.eleg-bg-boton kbd { font: 600 11px/1 inherit; padding: 4px 6px; border-radius: 6px; background: var(--eleg-well); border: 1px solid var(--eleg-line); opacity: .75; }
+@media (max-width: 1100px) { .eleg-bg-boton span, .eleg-bg-boton kbd { display: none; } .eleg-bg-boton { padding: 0; justify-content: center; width: 46px; } }
+.eleg-bg-fondo { position: fixed; inset: 0; z-index: 90; background: #0b0d1259; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: flex; justify-content: center; align-items: flex-start; padding: 10vh 16px 16px; animation: eleg-bg-entra .14s ease-out; }
+@keyframes eleg-bg-entra { from { opacity: 0; } }
+.eleg-bg { width: min(720px, 100%); max-height: 78vh; display: flex; flex-direction: column; border-radius: 22px; overflow: hidden; background: var(--eleg-float); color: var(--eleg-text); border: 1px solid var(--eleg-line); box-shadow: var(--eleg-pop); }
+.eleg-bg-campo { display: flex; align-items: center; gap: 12px; padding: 0 18px; height: 62px; border-bottom: 1px solid var(--eleg-line); flex: none; }
+.eleg-bg-campo > svg { width: 21px; height: 21px; opacity: .55; flex: none; }
+.eleg-bg-campo input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; outline: 0; font-size: 17px; color: inherit; }
+.eleg-bg-campo input::-webkit-search-cancel-button { display: none; }
+.eleg-bg kbd { font: 600 11px/1 ui-sans-serif, system-ui, sans-serif; padding: 4px 7px; border-radius: 6px; background: var(--eleg-well); border: 1px solid var(--eleg-line); }
+.eleg-bg-campo kbd { cursor: pointer; opacity: .7; }
+.eleg-bg-girando { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--eleg-line); border-top-color: var(--eleg-text); animation: eleg-bg-gira .7s linear infinite; flex: none; }
+@keyframes eleg-bg-gira { to { transform: rotate(360deg); } }
+.eleg-bg-lista { overflow-y: auto; padding: 6px 8px 10px; flex: 1; min-height: 120px; }
+.eleg-bg-sec h3 { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .5; margin: 12px 10px 6px; }
+.eleg-bg-sec h3 span { font-weight: 600; margin-left: 4px; }
+.eleg-bg-fila { width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 14px; text-align: left; background: transparent; border: 0; color: inherit; cursor: pointer; }
+.eleg-bg-fila.on { background: var(--eleg-well); box-shadow: inset 0 0 0 1px var(--eleg-line); }
+.eleg-bg-ini { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 700; font-size: 14px; background: var(--eleg-well); }
+.eleg-bg-ini svg { width: 17px; height: 17px; opacity: .75; }
+.eleg-bg-ini-msg { border-radius: 11px; }
+.eleg-bg-ini-ped { border-radius: 11px; }
+.eleg-bg-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.eleg-bg-txt b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eleg-bg-txt b em { font-style: normal; font-weight: 500; opacity: .5; font-size: 12px; }
+.eleg-bg-txt small { font-size: 12.5px; opacity: .68; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eleg-bg-trozo { white-space: normal !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; }
+.eleg-bg mark { background: #ffd54a8c; color: inherit; border-radius: 3px; padding: 0 1px; }
+:root[data-theme="dark"] .eleg-bg mark { background: #c9cbff47; }
+.eleg-bg-fila time { font-size: 11.5px; opacity: .5; flex: none; align-self: flex-start; padding-top: 3px; }
+.eleg-bg-vacio { text-align: center; font-size: 14px; opacity: .65; padding: 28px 16px; line-height: 1.6; }
+.eleg-bg-vacio span { font-size: 12.5px; opacity: .8; }
+.eleg-bg-pie { display: flex; gap: 18px; padding: 10px 18px; border-top: 1px solid var(--eleg-line); font-size: 12px; opacity: .7; flex: none; }
+.eleg-bg-pie span { display: flex; gap: 4px; align-items: center; }
+@media (max-width: 767px) {
+  .eleg-bg-fondo { padding: 12px 10px; }
+  .eleg-bg { max-height: 86vh; }
+  .eleg-bg-pie { display: none; }
+}
