@@ -17,7 +17,7 @@ import { OwnerBadge } from "./OwnerBadge";
 import { ContatoNoCard } from "./ContatoNoCard";
 import { ArquivosNoCard } from "./ArquivosNoCard";
 import { TarefasNoCard } from "./TarefasNoCard";
-import { EtiquetaEnProcesoDelCard, MenuDeEtiquetasDelCard } from "./MenuDeEtiquetasDelCard";
+import { EtiquetaEnProcesoDelCard, EtiquetaListaDelCard, MenuDeEtiquetasDelCard } from "./MenuDeEtiquetasDelCard";
 
 /** Os dois gestos de seleção que o card sabe relatar. */
 export type GestoDeSelecao = "alterna" | "intervalo";
@@ -341,6 +341,7 @@ export const KanbanCard = memo(function KanbanCard({
             )}
             {!value && !recorrente && "—"}
             <EtiquetaEnProcesoDelCard tags={lead.tags ?? []} />
+            <EtiquetaListaDelCard tags={lead.tags ?? []} />
           </p>
           {!somenteLeitura && menuDeEtiquetas && (
             <MenuDeEtiquetasDelCard

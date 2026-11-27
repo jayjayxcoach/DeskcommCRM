@@ -364,6 +364,7 @@ export function InboxLayout({
       channel_session_id: lembrados.channel_session_id,
       onlyUnread: lembrados.onlyUnread ?? false,
       etapas: leerEtapasDeLaBandeja(orgId),
+      lista: leerListaDeLaBandeja(orgId),
     }));
     // O contexto acompanha o estado restaurado no PRÓXIMO render. Uma ref
     // marcada aqui liberaria o efeito de gravação com os filtros anteriores.
@@ -380,13 +381,14 @@ export function InboxLayout({
   useEffect(() => {
     if (!orgId || orgDosFiltros !== orgId) return;
     guardarEtapasDeLaBandeja(orgId, aux.etapas);
-  }, [orgId, orgDosFiltros, aux.etapas]);
+    guardarListaDeLaBandeja(orgId, aux.lista);
+  }, [orgId, orgDosFiltros, aux.etapas, aux.lista]);
   const filterValue: InboxFiltersValue = {
     tab,
     ...aux,
     // Uma troca de organização não leva o número anterior nem à consulta.
     ...(orgDosFiltros !== orgId
-      ? { channel_session_id: undefined, onlyUnread: false, etapas: undefined }
+      ? { channel_session_id: undefined, onlyUnread: false, etapas: undefined, lista: undefined }
       : {}),
   };
   const setFilterValue = useCallback(
@@ -540,9 +542,11 @@ export function InboxLayout({
       unread: filterValue.onlyUnread || undefined,
       is_group: filterValue.onlyGroups || undefined,
       etapas: etapasDelFiltro ? etapasDelFiltro.split(",") : undefined,
+      lista: filterValue.lista || undefined,
     }),
     [
       etapasDelFiltro,
+      filterValue.lista,
       filterValue.tab,
       automaticoDaOrg,
       filterValue.assigned_to,
@@ -1425,6 +1429,26 @@ function guardarEtapasDeLaBandeja(orgId: string, etapas: string[] | undefined): 
     }
   } catch {
     /* aparato sin almacenamiento: el filtro vale mientras la página esté abierta */
+  }
+}
+
+const claveListaBandeja = (orgId: string) => `eleg-lista-bandeja:${orgId}`;
+
+/** Elegancia: 🔥 "Para cerrar" prendido en la Bandeja, guardado en este aparato. */
+function leerListaDeLaBandeja(orgId: string): boolean | undefined {
+  try {
+    return window.localStorage.getItem(claveListaBandeja(orgId)) === "1" ? true : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function guardarListaDeLaBandeja(orgId: string, lista: boolean | undefined): void {
+  try {
+    if (lista) window.localStorage.setItem(claveListaBandeja(orgId), "1");
+    else window.localStorage.removeItem(claveListaBandeja(orgId));
+  } catch {
+    /* aparato sin almacenamiento */
   }
 }
 

@@ -608,6 +608,8 @@ export const listConversationsQuerySchema = z.object({
     .string()
     .regex(/^[0-9a-fA-F-]{36}(,[0-9a-fA-F-]{36}){0,39}$/)
     .optional(),
+  /** Elegancia: 🔥 solo las clientas listas para pagar (etiqueta `lista-para-pagar` en su pedido principal). */
+  lista: z.enum(["1"]).optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });

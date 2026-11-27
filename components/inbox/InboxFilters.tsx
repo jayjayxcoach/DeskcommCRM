@@ -144,6 +144,8 @@ export interface InboxFiltersValue {
    * por aparato (InboxLayout) y no cambia ningún pedido.
    */
   etapas?: string[];
+  /** Elegancia: 🔥 solo las clientas listas para pagar. Se guarda por aparato. */
+  lista?: boolean;
 }
 
 /**
@@ -622,6 +624,9 @@ export function InboxFilters({
         {!filtrosAbiertos && nombresDeEtapas && (
           <span className="eleg-inbox-filtros-etapa">· {nombresDeEtapas}</span>
         )}
+        {!filtrosAbiertos && value.lista && (
+          <span className="eleg-inbox-filtros-etapa">· 🔥 Para cerrar</span>
+        )}
       </button>
       <div className="eleg-inbox-filtros space-y-2 px-3 pt-3 pb-2" data-abierto={filtrosAbiertos ? "" : undefined}>
         <div className="flex items-center gap-2">
@@ -931,6 +936,19 @@ export function InboxFilters({
               className="h-9 w-full min-w-0 pl-1 pr-3 text-xs"
               textoSinFiltro="Todas las etapas"
             />
+            {/* 🔥 Para cerrar: solo las clientas que Haiku marcó como listas
+                para pagar (etiqueta `lista-para-pagar`). Pedido de Jay, 27-nov-2026. */}
+            <button
+              type="button"
+              aria-pressed={Boolean(value.lista)}
+              data-testid="filtro-para-cerrar"
+              onClick={() => onChange({ ...value, lista: value.lista ? undefined : true })}
+              title="Ver solo las clientas listas para pagar"
+              className="eleg-para-cerrar h-9 shrink-0 rounded-md border px-3 text-xs font-medium"
+              data-activo={value.lista ? "" : undefined}
+            >
+              🔥 Para cerrar
+            </button>
           </div>
         )}
       </div>

@@ -132,6 +132,7 @@ async function responderLista(
     pessoais: url.searchParams.get("pessoais") ?? undefined,
     // Elegancia: filtro por etapa del embudo (ids separados por coma).
     etapa: url.searchParams.get("etapa") ?? undefined,
+    lista: url.searchParams.get("lista") ?? undefined,
     cursor: url.searchParams.get("cursor") ?? undefined,
     limit: url.searchParams.get("limit") ?? undefined,
   });

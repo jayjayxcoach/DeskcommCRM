@@ -8,6 +8,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
 import { Check, Robot, Sparkle } from "@/lib/ui/icons";
 import { ChannelLogo } from "@/components/inbox/ChannelLogo";
+import { nombreDelCanal } from "@/hooks/inbox/useOtrosCanalesDelContacto";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChipDeEtiqueta } from "@/components/tags/ChipDeEtiqueta";
@@ -95,6 +96,8 @@ interface Props {
    * QueryClient set". Quem faz o `POST .../usable-for-rag` é a lista.
    */
   onAlternarExemplo?: (id: string, enabled: boolean) => void;
+  /** Elegancia: otros canales por los que escribe la MISMA clienta (filas agrupadas). */
+  otrosCanales?: string[];
   /**
    * Esta conversa tem uma menção PENDENTE para quem está olhando a lista
    * (#2372). Vem da lista (uma marca só, compartilhada) e não de hook por
@@ -173,6 +176,7 @@ export function ConversationListItem({
   selecionado = false,
   onAlternarSelecao,
   onAlternarExemplo,
+  otrosCanales,
   mencionado = false,
   haySeleccion = false,
 }: Props) {
@@ -290,6 +294,7 @@ export function ConversationListItem({
     exemploMarcado ||
     (mostrarAtendente && comando.quem === "humano") ||
     etapa != null ||
+    (otrosCanales?.length ?? 0) > 0 ||
     Boolean(c?.is_blocked) ||
     Boolean(c?.is_anonymized);
 
@@ -535,6 +540,24 @@ export function ConversationListItem({
               >
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: etapa.color }} aria-hidden />
                 <span className="truncate">{etapa.nombre}</span>
+              </span>
+            )}
+            {otrosCanales && otrosCanales.length > 0 && (
+              <span
+                data-testid="otros-canales"
+                className="inline-flex h-4 shrink-0 items-center rounded-full border border-border px-1.5 text-[10px] font-medium text-text-muted"
+                title="La misma clienta también escribe por estos canales: dentro del chat se ven juntos"
+              >
+                + {otrosCanales.map(nombreDelCanal).join(", ")}
+              </span>
+            )}
+            {etapa?.lista && (
+              <span
+                data-testid="lista-para-pagar"
+                className="inline-flex h-4 shrink-0 items-center gap-0.5 rounded-full border border-[#e0623f66] bg-[#e0623f1f] px-1.5 text-[10px] font-semibold text-text"
+                title="Lista para pagar: empújala tú"
+              >
+                🔥 Lista
               </span>
             )}
             {/* O SELO DO EXEMPLO vem ANTES das etiquetas de propósito: a faixa

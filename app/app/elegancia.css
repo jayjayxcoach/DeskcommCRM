@@ -416,3 +416,8 @@ body:has([data-marca-org][data-aparencia="elegancia"]):not(:has(.eleg-sel-caja[a
   .eleg-bg { max-height: 86vh; }
   .eleg-bg-pie { display: none; }
 }
+
+/* 🔥 Para cerrar (Bandeja): solo las clientas listas para pagar. 27-nov-2026 */
+.eleg-para-cerrar { border-color: var(--border); background: var(--surface, transparent); color: var(--text, inherit); white-space: nowrap; transition: background-color .15s, color .15s; }
+.eleg-para-cerrar:hover { background: var(--surface-elevated, rgba(0,0,0,.04)); }
+.eleg-para-cerrar[data-activo] { background: #e0623f; border-color: transparent; color: #fff; }

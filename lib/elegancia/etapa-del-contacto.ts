@@ -54,11 +54,20 @@ export function colorDeEtapa(etapa: EtapaParaColor, delFunil: readonly EtapaPara
   return COLORES_DE_ETAPA[(i < 0 ? abiertas.length : i) % COLORES_DE_ETAPA.length]!;
 }
 
+/**
+ * 🔥 La etiqueta que pone Haiku (el vigilante de Vale) en el pedido de una clienta
+ * que está LISTA PARA PAGAR (pedido de Jay, 27-nov-2026). Va aparte de la etapa:
+ * la etapa dice qué estamos haciendo; esta dice que ella está cerca de pagar.
+ */
+export const ETIQUETA_LISTA_PARA_PAGAR = "lista-para-pagar";
+
 /** Lo que cada conversación de la Bandeja recibe. */
 export interface EtapaDelEmbudo {
   id: string;
   nombre: string;
   color: string;
+  /** 🔥 su pedido principal está abierto y lleva `lista-para-pagar`. */
+  lista?: boolean;
 }
 
 interface PedidoMinimo {
@@ -66,6 +75,12 @@ interface PedidoMinimo {
   stage_id: string;
   status: string | null;
   updated_at: string | null;
+  tags?: string[] | null;
+}
+
+/** 🔥 ¿este pedido es de una clienta lista para pagar? (abierto + etiqueta). */
+export function pedidoListoParaPagar(p: Pick<PedidoMinimo, "status" | "tags">): boolean {
+  return p.status === "open" && (p.tags ?? []).includes(ETIQUETA_LISTA_PARA_PAGAR);
 }
 
 /** contacto → su pedido principal (regla de arriba). */
@@ -97,7 +112,7 @@ export function etapaPrincipalPorContacto(pedidos: readonly PedidoMinimo[]): Map
   return salida;
 }
 
-const COLUMNAS_PEDIDO = "contact_id, stage_id, status, updated_at";
+const COLUMNAS_PEDIDO = "contact_id, stage_id, status, updated_at, tags";
 
 /**
  * Los contactos cuyo pedido principal está en alguna de `etapas`, del pedido
@@ -110,6 +125,8 @@ export async function contactosEnEtapas(
   supabase: SupabaseClient,
   organizationId: string,
   etapas: readonly string[],
+  /** 🔥 solo las clientas listas para pagar (sola o junto con `etapas`). */
+  soloListas = false,
 ): Promise<string[]> {
   const pedidos: PedidoMinimo[] = [];
   const LOTE = 1000;
@@ -127,7 +144,7 @@ export async function contactosEnEtapas(
   }
   const elegidas = new Set(etapas);
   return [...pedidoPrincipalPorContacto(pedidos)]
-    .filter(([, p]) => elegidas.has(p.stage_id))
+    .filter(([, p]) => (elegidas.size === 0 || elegidas.has(p.stage_id)) && (!soloListas || pedidoListoParaPagar(p)))
     .sort(([, a], [, b]) => ((b.updated_at ?? "") > (a.updated_at ?? "") ? 1 : -1))
     .map(([contacto]) => contacto);
 }
@@ -152,6 +169,7 @@ export async function conEtapaDelEmbudo<T extends { contact_id?: string | null }
       .eq("organization_id", organizationId)
       .in("contact_id", contactos);
     if (error || !pedidos) return sinEtapa();
+    const pedidoPrincipal = pedidoPrincipalPorContacto(pedidos as PedidoMinimo[]);
     const principal = etapaPrincipalPorContacto(pedidos as PedidoMinimo[]);
     const idsDeEtapa = [...new Set(principal.values())];
     if (idsDeEtapa.length === 0) return sinEtapa();
@@ -179,7 +197,12 @@ export async function conEtapaDelEmbudo<T extends { contact_id?: string | null }
       const delFunil = todas.filter((e) => e.pipeline_id === etapa.pipeline_id);
       return {
         ...c,
-        etapa_del_embudo: { id: etapa.id, nombre: etapa.name, color: colorDeEtapa(etapa, delFunil) },
+        etapa_del_embudo: {
+          id: etapa.id,
+          nombre: etapa.name,
+          color: colorDeEtapa(etapa, delFunil),
+          lista: pedidoListoParaPagar(pedidoPrincipal.get(c.contact_id as string) ?? { status: null }),
+        },
       };
     });
   } catch {

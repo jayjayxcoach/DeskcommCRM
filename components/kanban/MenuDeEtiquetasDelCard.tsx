@@ -86,6 +86,20 @@ export function MenuDeEtiquetasDelCard({ lead, pipelineId, posicion, onCerrar }:
   );
 }
 
+/** 🔥 La marca de "lista para pagar" (la pone Haiku; pedido de Jay, 27-nov-2026). */
+export function EtiquetaListaDelCard({ tags }: { tags: readonly string[] }) {
+  if (!tags.includes("lista-para-pagar")) return null;
+  return (
+    <span
+      data-testid="etiqueta-lista-para-pagar"
+      title="Lista para pagar: empújala tú"
+      className="ml-1 inline-flex h-4 shrink-0 items-center rounded-full border border-[#e0623f66] bg-[#e0623f1f] px-1.5 text-[10px] font-semibold leading-4 text-text"
+    >
+      🔥 Lista
+    </span>
+  );
+}
+
 /** La etiqueta "En proceso" visible en la tarjeta, cuando está marcada. */
 export function EtiquetaEnProcesoDelCard({ tags }: { tags: readonly string[] }) {
   const cor = useCorDaEtiqueta(ETIQUETA_EN_PROCESO);

@@ -113,10 +113,43 @@ export function ConversationList({
   // Sem filtro de cliente: TODO filtro é parâmetro do schema e roda no banco.
   // `clientFilter` era o mecanismo que permitia um filtro existir fora do contrato
   // — e foi por ele que "Não lidos" virou ilha, fora da cerca que vigia os demais.
-  const items = useMemo(
+  const crudos = useMemo(
     () => (q.data?.pages.flatMap((p) => p.data) ?? []) as ConversationWithContact[],
     [q.data],
   );
+
+  /**
+   * Elegancia (pedido de Jay, 27-nov-2026): UNA CLIENTA = UNA FILA. Si la misma
+   * clienta tiene conversación por WhatsApp, Messenger e Instagram (fichas
+   * juntadas), la lista muestra solo la más reciente — o la que está abierta — y
+   * dice por qué otros canales escribe. Dentro del chat se ven todos juntos.
+   */
+  const { items, otrosCanalesPorId } = useMemo(() => {
+    const grupos = new Map<string, ConversationWithContact[]>();
+    const orden: (ConversationWithContact | string)[] = [];
+    for (const c of crudos) {
+      const k = c.contact_id;
+      if (!k || c.is_group) {
+        orden.push(c);
+        continue;
+      }
+      const g = grupos.get(k);
+      if (g) g.push(c);
+      else {
+        grupos.set(k, [c]);
+        orden.push(k);
+      }
+    }
+    const otros = new Map<string, string[]>();
+    const lista = orden.map((x) => {
+      if (typeof x !== "string") return x;
+      const g = grupos.get(x)!;
+      const fila = g.find((c) => c.id === selectedId) ?? g[0]!;
+      if (g.length > 1) otros.set(fila.id, g.filter((c) => c.id !== fila.id).map((c) => c.channel));
+      return fila;
+    });
+    return { items: lista, otrosCanalesPorId: otros };
+  }, [crudos, selectedId]);
 
   // Notify parent of currently-visible IDs (for j/k nav). Must use effect
   // (not render-time call) — invoking onVisibleChange during render triggers
@@ -334,6 +367,7 @@ export function ConversationList({
             onAlternarSelecao={onAlternarSelecao}
             haySeleccion={(selecionados?.size ?? 0) > 0}
             onAlternarExemplo={podeMarcarExemplo ? alternarExemplo : undefined}
+            otrosCanales={otrosCanalesPorId.get(c.id)}
           />
         ))}
         {q.hasNextPage && (

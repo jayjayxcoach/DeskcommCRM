@@ -22,6 +22,9 @@ export const EVENTOS: ReadonlyArray<{ tag: string; nombre: string; ini: string; 
   { tag: "primera-comunion", nombre: "Primera comunión", ini: "PC", color: "#c99a13" },
 ];
 
+/** 🔥 La etiqueta que pone Haiku a las clientas listas para pagar (27-nov-2026). */
+export const ETIQUETA_LISTA = "lista-para-pagar";
+
 interface Props {
   filters: LeadFilters;
   onChange: (f: LeadFilters) => void;
@@ -36,20 +39,48 @@ export function BotonesDeEvento({ filters, onChange, leads, children }: Props) {
     for (const lead of leads) {
       const marcas = new Set(marcadoresDoCard(lead).map((m) => m.toLowerCase()));
       for (const e of EVENTOS) if (marcas.has(e.tag)) c.set(e.tag, (c.get(e.tag) ?? 0) + 1);
+      if (marcas.has(ETIQUETA_LISTA) && lead.status === "open") c.set(ETIQUETA_LISTA, (c.get(ETIQUETA_LISTA) ?? 0) + 1);
     }
     return c;
   }, [leads]);
 
   const presentes = EVENTOS.filter((e) => (cuenta.get(e.tag) ?? 0) > 0);
-  if (presentes.length === 0)
-    return children ? (
-      <div className="eleg-eventos flex flex-wrap items-center gap-2">{children}</div>
-    ) : null;
 
+  // 🔥 Para cerrar se combina con el evento (las dos etiquetas a la vez).
   const elegidas = marcadoresDoFiltro(filters.tag);
-  const activo = elegidas.length === 1 ? elegidas[0] : null;
-  const elegir = (tag: string | null) =>
-    onChange({ ...filters, tag: tag ? [tag] : undefined, tagMode: undefined });
+  const listaOn = elegidas.includes(ETIQUETA_LISTA);
+  const eventosElegidos = elegidas.filter((t) => t !== ETIQUETA_LISTA);
+  const activo = eventosElegidos.length === 1 ? (eventosElegidos[0] ?? null) : null;
+  const aplicar = (evento: string | null, lista: boolean) => {
+    const tags = [...(evento ? [evento] : []), ...(lista ? [ETIQUETA_LISTA] : [])];
+    onChange({ ...filters, tag: tags.length ? tags : undefined, tagMode: undefined });
+  };
+  const elegir = (tag: string | null) => aplicar(tag, listaOn);
+
+  const botonLista = (
+    <button
+      type="button"
+      aria-pressed={listaOn}
+      data-testid="embudo-para-cerrar"
+      title="Ver solo las clientas listas para pagar"
+      onClick={() => aplicar(activo, !listaOn)}
+      className={cn(
+        "flex h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors",
+        listaOn ? "border-transparent bg-[#e0623f] text-white" : "border-border bg-surface text-text hover:bg-surface-elevated",
+      )}
+    >
+      🔥 Para cerrar
+      <span className="text-xs opacity-70">{cuenta.get(ETIQUETA_LISTA) ?? 0}</span>
+    </button>
+  );
+
+  if (presentes.length === 0)
+    return (
+      <div className="eleg-eventos flex flex-wrap items-center gap-2">
+        {botonLista}
+        {children}
+      </div>
+    );
 
   const boton = "flex h-10 shrink-0 items-center gap-2 rounded-full border pl-1.5 pr-4 text-sm font-medium transition-colors";
   const normal = "border-border bg-surface text-text hover:bg-surface-elevated";
@@ -81,6 +112,7 @@ export function BotonesDeEvento({ filters, onChange, leads, children }: Props) {
           <span className="text-xs opacity-60">{cuenta.get(e.tag)}</span>
         </button>
       ))}
+      {botonLista}
       {children}
     </div>
   );

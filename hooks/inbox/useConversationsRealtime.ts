@@ -85,7 +85,7 @@ export type ConversationWithContact = Conversation & {
    * color del embudo (`lib/elegancia/etapa-del-contacto.ts`). `null` = sin
    * pedido; ausente = respuesta en caché de antes del campo.
    */
-  etapa_del_embudo?: { id: string; nombre: string; color: string } | null;
+  etapa_del_embudo?: { id: string; nombre: string; color: string; lista?: boolean } | null;
 };
 
 /** O vocabulário de LEITURA (7), que inclui os dois estados que só o motor escreve. */
@@ -144,6 +144,8 @@ export interface ConversationsFilters {
   pessoais?: boolean;
   /** Elegancia: solo las clientas en estas etapas del embudo (ids). */
   etapas?: readonly string[];
+  /** Elegancia: 🔥 solo las clientas listas para pagar. */
+  lista?: boolean;
 }
 
 interface ListResponse {
@@ -228,6 +230,7 @@ export function useConversationsRealtime(
       // de hoje mudaria a URL sem mudar o sentido.
       if (filters.pessoais) qs.set("pessoais", "true");
       if (filters.etapas && filters.etapas.length > 0) qs.set("etapa", filters.etapas.join(","));
+      if (filters.lista) qs.set("lista", "1");
       if (pageParam) qs.set("cursor", pageParam);
       qs.set("limit", "50");
       try {

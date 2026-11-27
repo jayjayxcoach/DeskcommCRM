@@ -17,6 +17,8 @@ import { NoteCard } from "./NoteCard";
 import { PassagemCard } from "./PassagemCard";
 import { useThreadAutoScroll } from "@/hooks/inbox/useThreadAutoScroll";
 import { useMessagesRealtime } from "@/hooks/inbox/useMessagesRealtime";
+import { nombreDelCanal, useOtrosCanalesDelContacto } from "@/hooks/inbox/useOtrosCanalesDelContacto";
+import Link from "next/link";
 import { useConversationNotes } from "@/hooks/inbox/useConversationNotes";
 import { usePassagensDaConversa } from "@/hooks/inbox/usePassagensDaConversa";
 import { useClaimConversation } from "@/hooks/inbox/useClaimConversation";
@@ -64,7 +66,9 @@ interface Props {
 export type ThreadItem =
   | { kind: "message"; ts: string; data: Message }
   | { kind: "note"; ts: string; data: Note }
-  | { kind: "passagem"; ts: string; data: CartaoDaPassagem };
+  | { kind: "passagem"; ts: string; data: CartaoDaPassagem }
+  // Elegancia: mensaje de la MISMA clienta por otro canal (solo lectura).
+  | { kind: "otro_canal"; ts: string; data: Message; canal: string; conversaId: string };
 
 /** Intercala mensagens, notas e passagens por timestamp asc (puro, sem I/O — testado em thread-merge.test.ts). */
 export function mergeThreadItems(
@@ -73,9 +77,13 @@ export function mergeThreadItems(
   // Opcional porque o fio existe desde antes da passagem, e uma conversa que
   // nunca saiu do automático não tem nenhuma.
   passagens: CartaoDaPassagem[] = [],
+  otrosCanales: { mensaje: Message; canal: string; conversaId: string }[] = [],
 ): ThreadItem[] {
   const items: ThreadItem[] = [
     ...messages.map((data): ThreadItem => ({ kind: "message", ts: data.sent_at, data })),
+    ...otrosCanales.map(
+      (o): ThreadItem => ({ kind: "otro_canal", ts: o.mensaje.sent_at, data: o.mensaje, canal: o.canal, conversaId: o.conversaId }),
+    ),
     ...notes.map((data): ThreadItem => ({ kind: "note", ts: data.created_at, data })),
     ...passagens.map((data): ThreadItem => ({ kind: "passagem", ts: data.criadoEm, data })),
   ];
@@ -188,9 +196,30 @@ export function ChatThread({
 
   const { falas, reacoesPorAlvo } = useMemo(() => separarReacoes(messages), [messages]);
 
+  // Elegancia: UNA CLIENTA = UN CHAT. Lo que escribió por otros canales entra en
+  // el mismo hilo, por fecha (se puede apagar con "Solo este canal").
+  const otrosCanales = useOtrosCanalesDelContacto(contatoId, conversationId);
+  const [chatUnido, setChatUnido] = useState(() => {
+    try {
+      return typeof window === "undefined" || window.localStorage.getItem("eleg-chat-unido") !== "0";
+    } catch {
+      return true; // sin almacenamiento: queda unido
+    }
+  });
+  const alternarChatUnido = () => {
+    setChatUnido((v) => {
+      try {
+        window.localStorage.setItem("eleg-chat-unido", v ? "0" : "1");
+      } catch {
+        /* sin almacenamiento */
+      }
+      return !v;
+    });
+  };
+
   const items: ThreadItem[] = useMemo(
-    () => mergeThreadItems(falas, notes, cartoes),
-    [falas, notes, cartoes],
+    () => mergeThreadItems(falas, notes, cartoes, chatUnido ? otrosCanales.mensajes : []),
+    [falas, notes, cartoes, chatUnido, otrosCanales.mensajes],
   );
 
   const lastItem = items[items.length - 1];
@@ -382,6 +411,35 @@ export function ChatThread({
 
   return (
     <div {...sinalDoCanal} className="relative flex h-full min-h-0 min-w-0 flex-col">
+      {otrosCanales.otras.length > 0 && (
+        <div
+          className="flex flex-wrap items-center gap-1.5 border-b border-border/70 px-3 py-1.5 text-xs"
+          data-testid="canales-de-la-clienta"
+        >
+          <span className="text-muted-foreground">Esta clienta escribe por:</span>
+          <span className="rounded-full border border-transparent bg-accent px-2 py-0.5 font-medium text-accent-foreground">
+            {nombreDelCanal(otrosCanales.canalActual ?? provider)} · aquí respondes
+          </span>
+          {otrosCanales.otras.map((o) => (
+            <Link
+              key={o.id}
+              href={`/app/inbox?filter=all&id=${o.id}`}
+              className="rounded-full border border-border px-2 py-0.5 font-medium hover:bg-surface-elevated"
+              title={`Abrir el chat de ${nombreDelCanal(o.canal)} para responder por ahí`}
+            >
+              {nombreDelCanal(o.canal)} →
+            </Link>
+          ))}
+          <button
+            type="button"
+            onClick={alternarChatUnido}
+            className="ml-auto rounded-full px-2 py-0.5 text-muted-foreground underline-offset-2 hover:underline"
+            aria-pressed={chatUnido}
+          >
+            {chatUnido ? "Solo este canal" : "Ver todo junto"}
+          </button>
+        </div>
+      )}
       {termo && (
         <div className="px-4 py-1 text-xs text-muted-foreground" role="status">
           {t("Resultados nas mensagens carregadas")}: {resultados.size}
@@ -413,7 +471,22 @@ export function ChatThread({
               </span>
             </div>
             {g.items.map((item) =>
-              item.kind === "passagem" ? (
+              item.kind === "otro_canal" ? (
+                <div
+                  key={`otro-${item.data.id}`}
+                  className="opacity-80"
+                  data-testid="mensaje-de-otro-canal"
+                >
+                  <div
+                    className={`px-4 text-[10px] font-medium text-muted-foreground ${item.data.direction === "outbound" ? "text-right" : "text-left"}`}
+                  >
+                    <Link href={`/app/inbox?filter=all&id=${item.conversaId}`} className="hover:underline">
+                      por {nombreDelCanal(item.canal)}
+                    </Link>
+                  </div>
+                  <MessageBubble message={item.data} viewerUserId={currentUser.id} />
+                </div>
+              ) : item.kind === "passagem" ? (
                 <PassagemCard
                   key={`passagem-${item.data.id}`}
                   cartao={item.data}

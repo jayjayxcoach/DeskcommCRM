@@ -334,10 +334,10 @@ export async function listConversationsHandler(
   // en una de las etapas elegidas (la misma regla que pinta la etiqueta de la
   // fila). Los ids viajan en la URL, así que se cortan al presupuesto; vienen
   // del pedido más reciente al más viejo, y lo que se pierde es lo de abajo.
-  if (q.etapa) {
-    const etapas = q.etapa.split(",").filter(Boolean);
+  if (q.etapa || q.lista) {
+    const etapas = (q.etapa ?? "").split(",").filter(Boolean);
     const ids = idsQueCabemNaURL(
-      await contactosEnEtapas(supabase, ctx.organization_id, etapas),
+      await contactosEnEtapas(supabase, ctx.organization_id, etapas, q.lista === "1"),
     );
     if (ids.length === 0) return { conversations: [], cursor: null, has_more: false };
     query = query.in("contact_id", ids);
