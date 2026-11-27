@@ -933,7 +933,7 @@ export function InboxFilters({
               stages={etapasDelEmbudo}
               visibles={etapasVisibles}
               onChange={(ids) => onChange({ ...value, etapas: ids ?? undefined })}
-              className="h-9 w-full min-w-0 pl-1 pr-3 text-xs"
+              className="h-9 min-w-0 flex-1 shrink pl-1 pr-3 text-xs"
               textoSinFiltro="Todas las etapas"
             />
             {/* 🔥 Para cerrar: solo las clientas que Haiku marcó como listas
